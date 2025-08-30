@@ -2,85 +2,259 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, History, Upload, Download, FileText } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import { supabase } from '../lib/supabase';
+import { supabaseAuth } from '../lib/supabaseAuth';
+import type { Tables } from '../types/supabase';
 
 interface TravelRegulationManagementProps {
   onNavigate: (view: 'dashboard' | 'business-trip' | 'expense' | 'tax-simulation' | 'travel-regulation-management' | 'travel-regulation-creation' | 'travel-regulation-history') => void;
 }
 
-interface Regulation {
+interface RegulationWithPositions {
   id: string;
-  companyName: string;
-  version: string;
+  regulation_name: string;
+  company_name: string;
+  company_address: string;
+  representative: string;
+  distance_threshold: number;
+  implementation_date: string;
+  revision_number: number;
+  status: string;
   createdAt: string;
   updatedAt: string;
-  status: 'active' | 'draft' | 'archived';
-  domesticAllowance: {
-    executive: number;
-    manager: number;
-    general: number;
-  };
-  overseasAllowance: {
-    executive: number;
-    manager: number;
-    general: number;
-  };
+  positions: Array<{
+    position_name: string;
+    domestic_daily_allowance: number;
+    overseas_daily_allowance: number;
+  }>;
 }
 
 function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementProps) {
+  const authState = supabaseAuth.getAuthState();
+  const { user } = authState;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [regulations, setRegulations] = useState<Regulation[]>([]);
+  const [regulations, setRegulations] = useState<RegulationWithPositions[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    // ローカルストレージから規程データを読み込み
-    const savedRegulations = JSON.parse(localStorage.getItem('travelRegulations') || '[]');
-    setRegulations(savedRegulations);
+    if (user) {
+      loadRegulations();
+    }
   }, []);
 
+  const loadRegulations = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      // 出張規程とその役職別設定を取得
+      const { data: regulationsData, error: regulationsError } = await supabase
+        .from('travel_expense_regulations')
+        .select(`
+          *,
+          positions:regulation_positions(
+            position_name,
+            domestic_daily_allowance,
+            overseas_daily_allowance
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (regulationsError) {
+        throw regulationsError;
+      }
+
+      const formattedRegulations: RegulationWithPositions[] = (regulationsData || []).map(reg => ({
+        id: reg.id,
+        regulation_name: reg.regulation_name,
+        company_name: reg.company_name || '',
+        company_address: reg.company_address || '',
+        representative: reg.representative || '',
+        distance_threshold: reg.distance_threshold || 50,
+        implementation_date: reg.implementation_date || '',
+        revision_number: reg.revision_number || 1,
+        status: reg.status || 'draft',
+        createdAt: reg.created_at,
+        updatedAt: reg.updated_at,
+        positions: (reg as any).positions || []
+      }));
+
+      setRegulations(formattedRegulations);
+    } catch (err: any) {
+      console.error('規程の読み込みエラー:', err);
+      setError(err.message || '規程の読み込みに失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const filteredRegulations = regulations.filter(regulation =>
-    (regulation.companyName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (regulation.version || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (regulation.company_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (regulation.regulation_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('この規程を削除してもよろしいですか？')) {
-      const updatedRegulations = regulations.filter(reg => reg.id !== id);
-      setRegulations(updatedRegulations);
-      localStorage.setItem('travelRegulations', JSON.stringify(updatedRegulations));
+      try {
+        const { error } = await supabase
+          .from('travel_expense_regulations')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        alert('規程が削除されました');
+        loadRegulations(); // データを再読み込み
+      } catch (err: any) {
+        alert('規程の削除に失敗しました: ' + err.message);
+      }
     }
   };
 
   const handleEdit = (id: string) => {
-    // 編集機能は規程作成画面で実装
+    // 編集対象のIDをローカルストレージに保存
     localStorage.setItem('editingRegulationId', id);
     onNavigate('travel-regulation-creation');
+  };
+
+  const handleExportPDF = async (regulation: RegulationWithPositions) => {
+    try {
+      // 規程テキストを生成
+      const regulationText = generateRegulationText(regulation);
+      
+      // PDF生成（印刷ダイアログを開く）
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>${regulation.regulation_name}</title>
+              <style>
+                body { 
+                  font-family: 'MS Gothic', monospace; 
+                  font-size: 12px; 
+                  line-height: 1.6; 
+                  margin: 20px; 
+                  white-space: pre-line;
+                }
+                h1 { 
+                  text-align: center; 
+                  font-size: 16px; 
+                  margin-bottom: 30px; 
+                }
+                .content { 
+                  white-space: pre-line; 
+                }
+                @media print {
+                  body { margin: 0; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="content">${regulationText}</div>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    } catch (err) {
+      alert('PDF出力に失敗しました');
+    }
+  };
+
+  const handleExportWord = (regulation: RegulationWithPositions) => {
+    try {
+      const regulationText = generateRegulationText(regulation);
+      
+      // テキストファイルとしてダウンロード
+      const blob = new Blob([regulationText], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${regulation.regulation_name}_v${regulation.revision_number}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Word出力に失敗しました');
+    }
+  };
+
+  const generateRegulationText = (regulation: RegulationWithPositions) => {
+    const implementationDate = new Date(regulation.implementation_date);
+    const implementationYear = implementationDate.getFullYear();
+    const implementationMonth = implementationDate.getMonth() + 1;
+    const implementationDay = implementationDate.getDate();
+
+    // 役職別日当テーブルを生成
+    const positionTable = regulation.positions.map(pos => 
+      `${pos.position_name}\t${pos.domestic_daily_allowance}\t実費\t実費\t${pos.overseas_daily_allowance}\t実費\t5000\t実費`
+    ).join('\n');
+
+    return `出張旅費規程
+
+（目的）
+第１条　この規程は、役員または従業員が社命により、出張する場合の、旅費について定めたものである。
+
+（適用範囲）
+第２条　この規程は、役員及び全ての従業員について適用する。
+
+（旅費の種類）
+第３条　この規程に基づく旅費とは、出張日当、交通費、宿泊料、支度料の四種とし、その支給基準は第７条規定のとおりとする。ただし、交通費及び宿泊料についてはそれぞれ実費精算とすることができる。
+
+（出張の定義）
+第４条　出張とは、従業員が自宅または通常の勤務地を起点として、片道${regulation.distance_threshold}ｋｍ以上の目的地に移動し、職務を遂行するものをいう。
+
+（出張の承認）
+第５条　従業員が出張を行う場合は、事前に所属長の承認を得なければならない。ただし、緊急の場合は事後承認とすることができる。
+
+（出張の区分）
+第６条　出張は、以下のとおり区分する。
+　　　　１　国内出張
+　　　　　国内出張とは、日本国内の用務先に赴く出張であり、所属長（または代表者）が認めたものとする。当日中に帰着することが可能なものは、日帰り出張として出張日当と交通費日当（実費精算可）、宿泊を伴う出張は、出張日当と交通費日当（実費精算可）、宿泊日当（実費精算可）を第７条に定める旅費を支給する。日帰り出張は1日、1泊2日は2日と日数を計算する。
+　　　　２　海外出張
+　　　　　海外出張とは、日本国外の地域への宿泊を伴う出張であり、所属長（または代表者）が認めたものとする。出張日当と交通費日当（実費精算可）、宿泊日当（実費精算可）に加えて、支度料を第７条に定める旅費を支給する。
+
+（旅費一覧）
+第７条　旅費は、以下のとおり役職に応じて支給する。
+（円）
+\t国内出張\t海外出張
+役職\t出張日当\t宿泊料\t交通費\t出張日当\t宿泊料\t支度料\t交通費
+${positionTable}
+
+（交通機関）
+第８条　利用する交通手段は、原則として、鉄道、船舶、飛行機、バスとする。
+　　　　２　前項に関わらず、会社が必要と認めた場合は、タクシーまたは社有の自動車を利用できるものとする。
+
+（旅費の支給方法）
+第９条　旅費は、原則として出張終了後に精算により支給する。ただし、必要に応じて概算払いを行うことができる。
+
+（規程の改廃）
+第１０条　本規程の改廃は、取締役会の決議により行う。
+
+（附則）
+第１１条　本規程は、令和${implementationYear - 2018}年${implementationMonth}月${implementationDay}日より実施する。
+
+${regulation.company_name}
+${regulation.representative}`;
   };
 
   const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
-      // PDFアップロード処理（実際の実装では、サーバーサイドでPDF解析を行う）
-      const newRegulation: Regulation = {
-        id: Date.now().toString(),
-        companyName: `アップロード規程_${file.name}`,
-        version: 'v1.0',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'draft',
-        domesticAllowance: { executive: 0, manager: 0, general: 0 },
-        overseasAllowance: { executive: 0, manager: 0, general: 0 }
-      };
-      
-      const updatedRegulations = [...regulations, newRegulation];
-      setRegulations(updatedRegulations);
-      localStorage.setItem('travelRegulations', JSON.stringify(updatedRegulations));
+      alert('PDFアップロード機能は現在開発中です。');
       setShowUploadModal(false);
-      alert('PDFファイルがアップロードされました。');
     } else {
       alert('PDFファイルを選択してください。');
     }
@@ -174,81 +348,122 @@ function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementPr
               </div>
 
               {/* 規程一覧 */}
-              <div className="backdrop-blur-xl bg-white/20 rounded-xl border border-white/30 shadow-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-white/30 border-b border-white/30">
-                      <tr>
-                        <th className="text-left py-4 px-6 font-medium text-slate-700">会社名</th>
-                        <th className="text-left py-4 px-6 font-medium text-slate-700">バージョン</th>
-                        <th className="text-left py-4 px-6 font-medium text-slate-700">ステータス</th>
-                        <th className="text-left py-4 px-6 font-medium text-slate-700">作成日</th>
-                        <th className="text-left py-4 px-6 font-medium text-slate-700">更新日</th>
-                        <th className="text-left py-4 px-6 font-medium text-slate-700">日当設定</th>
-                        <th className="text-center py-4 px-6 font-medium text-slate-700">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRegulations.length === 0 ? (
+              {loading ? (
+                <div className="backdrop-blur-xl bg-white/20 rounded-xl border border-white/30 shadow-xl p-12">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-navy-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-slate-600">規程を読み込み中...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="backdrop-blur-xl bg-red-50/20 rounded-xl border border-red-200/30 shadow-xl p-6">
+                  <p className="text-red-700 text-center">{error}</p>
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={loadRegulations}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      再試行
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="backdrop-blur-xl bg-white/20 rounded-xl border border-white/30 shadow-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-white/30 border-b border-white/30">
                         <tr>
-                          <td colSpan={7} className="text-center py-12 text-slate-500">
-                            {searchTerm ? '検索結果が見つかりません' : '規程が登録されていません'}
-                          </td>
+                          <th className="text-left py-4 px-6 font-medium text-slate-700">会社名</th>
+                          <th className="text-left py-4 px-6 font-medium text-slate-700">規程名</th>
+                          <th className="text-left py-4 px-6 font-medium text-slate-700">ステータス</th>
+                          <th className="text-left py-4 px-6 font-medium text-slate-700">作成日</th>
+                          <th className="text-left py-4 px-6 font-medium text-slate-700">更新日</th>
+                          <th className="text-left py-4 px-6 font-medium text-slate-700">日当設定</th>
+                          <th className="text-center py-4 px-6 font-medium text-slate-700">操作</th>
                         </tr>
-                      ) : (
-                        filteredRegulations.map((regulation) => (
-                          <tr key={regulation.id} className="border-b border-white/20 hover:bg-white/20 transition-colors">
-                            <td className="py-4 px-6 text-slate-800 font-medium">{regulation.companyName}</td>
-                            <td className="py-4 px-6 text-slate-700">{regulation.version}</td>
-                            <td className="py-4 px-6">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(regulation.status)}`}>
-                                {getStatusText(regulation.status)}
-                              </span>
-                            </td>
-                            <td className="py-4 px-6 text-slate-600 text-sm">
-                              {new Date(regulation.createdAt).toLocaleDateString('ja-JP')}
-                            </td>
-                            <td className="py-4 px-6 text-slate-600 text-sm">
-                              {new Date(regulation.updatedAt).toLocaleDateString('ja-JP')}
-                            </td>
-                            <td className="py-4 px-6 text-slate-600 text-sm">
-                              <div className="space-y-1">
-                                <div>国内: ¥{(regulation.domesticAllowance?.general || 0).toLocaleString()}</div>
-                                <div>海外: ¥{(regulation.overseasAllowance?.general || 0).toLocaleString()}</div>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6">
-                              <div className="flex items-center justify-center space-x-2">
-                                <button
-                                  onClick={() => handleEdit(regulation.id)}
-                                  className="p-2 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-colors"
-                                  title="編集"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => onNavigate('travel-regulation-history')}
-                                  className="p-2 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-colors"
-                                  title="履歴"
-                                >
-                                  <History className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(regulation.id)}
-                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50/30 rounded-lg transition-colors"
-                                  title="削除"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
+                      </thead>
+                      <tbody>
+                        {filteredRegulations.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-12 text-slate-500">
+                              {searchTerm ? '検索結果が見つかりません' : '規程が登録されていません'}
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        ) : (
+                          filteredRegulations.map((regulation) => (
+                            <tr key={regulation.id} className="border-b border-white/20 hover:bg-white/20 transition-colors">
+                              <td className="py-4 px-6 text-slate-800 font-medium">{regulation.company_name}</td>
+                              <td className="py-4 px-6 text-slate-700">{regulation.regulation_name}</td>
+                              <td className="py-4 px-6">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(regulation.status)}`}>
+                                  {getStatusText(regulation.status)}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 text-slate-600 text-sm">
+                                {new Date(regulation.createdAt).toLocaleDateString('ja-JP')}
+                              </td>
+                              <td className="py-4 px-6 text-slate-600 text-sm">
+                                {new Date(regulation.updatedAt).toLocaleDateString('ja-JP')}
+                              </td>
+                              <td className="py-4 px-6 text-slate-600 text-sm">
+                                <div className="space-y-1">
+                                  {regulation.positions.length > 0 ? (
+                                    <>
+                                      <div>国内: ¥{regulation.positions[0]?.domestic_daily_allowance?.toLocaleString() || '0'}</div>
+                                      <div>海外: ¥{regulation.positions[0]?.overseas_daily_allowance?.toLocaleString() || '0'}</div>
+                                    </>
+                                  ) : (
+                                    <div className="text-slate-400">未設定</div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="flex items-center justify-center space-x-1">
+                                  <button
+                                    onClick={() => handleEdit(regulation.id)}
+                                    className="p-2 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-colors"
+                                    title="編集"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => onNavigate('travel-regulation-history')}
+                                    className="p-2 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-colors"
+                                    title="履歴"
+                                  >
+                                    <History className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleExportPDF(regulation)}
+                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50/30 rounded-lg transition-colors"
+                                    title="PDF出力"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleExportWord(regulation)}
+                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50/30 rounded-lg transition-colors"
+                                    title="Word出力"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(regulation.id)}
+                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50/30 rounded-lg transition-colors"
+                                    title="削除"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

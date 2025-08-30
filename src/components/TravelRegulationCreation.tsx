@@ -209,29 +209,170 @@ ${data.companyInfo.representative}`;
     setError('');
 
     try {
-      // 1. 出張規程をメインテーブルに保存（更新されたスキーマを使用）
-      const { data: regulation, error: regulationError } = await supabase
-        .from('travel_expense_regulations')
-        .insert({
-          user_id: user.id,
-          regulation_name: `${data.companyInfo.name} 出張旅費規程`,
-          regulation_type: 'domestic',
-          transportation_real_expense: data.isTransportationRealExpense,
-          accommodation_real_expense: data.isAccommodationRealExpense,
-          position_allowances: data.positions
-        })
-        .select()
-        .single();
+      // 編集モードかどうかを確認
+      const editingId = localStorage.getItem('editingRegulationId');
+      
+      if (editingId) {
+        // 既存の規程を更新
+        const { error: updateError } = await supabase
+          .from('travel_expense_regulations')
+          .update({
+            regulation_name: `${data.companyInfo.name} 出張旅費規程`,
+            company_name: data.companyInfo.name,
+            company_address: data.companyInfo.address,
+            representative: data.companyInfo.representative,
+            distance_threshold: data.distanceThreshold,
+            implementation_date: data.implementationDate,
+            revision_number: data.companyInfo.revision,
+            is_transportation_real_expense: data.isTransportationRealExpense,
+            is_accommodation_real_expense: data.isAccommodationRealExpense,
+            regulation_full_text: generateRegulationText(),
+            status: 'active',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingId);
 
-      if (regulationError) throw regulationError;
+        if (updateError) throw updateError;
 
-      alert('出張規程が正常に保存されました！');
+        // 既存の役職設定を削除して新しいものを追加
+        const { error: deletePositionsError } = await supabase
+          .from('regulation_positions')
+          .delete()
+          .eq('regulation_id', editingId);
+
+        if (deletePositionsError) throw deletePositionsError;
+
+        // 新しい役職設定を追加
+        const positionsToInsert = data.positions.map(position => ({
+          regulation_id: editingId,
+          position_name: position.name,
+          domestic_daily_allowance: position.domesticDailyAllowance,
+          domestic_accommodation_allowance: position.domesticAccommodation,
+          domestic_transportation_allowance: position.domesticTransportation,
+          overseas_daily_allowance: position.overseasDailyAllowance,
+          overseas_accommodation_allowance: position.overseasAccommodation,
+          overseas_preparation_allowance: position.overseasPreparation,
+          overseas_transportation_allowance: position.overseasTransportation
+        }));
+
+        const { error: positionsError } = await supabase
+          .from('regulation_positions')
+          .insert(positionsToInsert);
+
+        if (positionsError) throw positionsError;
+
+        localStorage.removeItem('editingRegulationId');
+        alert('出張規程が正常に更新されました！');
+      } else {
+        // 新規作成
+        const { data: regulation, error: regulationError } = await supabase
+          .from('travel_expense_regulations')
+          .insert({
+            user_id: user.id,
+            regulation_name: `${data.companyInfo.name} 出張旅費規程`,
+            regulation_type: 'domestic',
+            company_name: data.companyInfo.name,
+            company_address: data.companyInfo.address,
+            representative: data.companyInfo.representative,
+            distance_threshold: data.distanceThreshold,
+            implementation_date: data.implementationDate,
+            revision_number: data.companyInfo.revision,
+            is_transportation_real_expense: data.isTransportationRealExpense,
+            is_accommodation_real_expense: data.isAccommodationRealExpense,
+            regulation_full_text: generateRegulationText(),
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (regulationError) throw regulationError;
+
+        // 役職別設定を保存
+        const positionsToInsert = data.positions.map(position => ({
+          regulation_id: regulation.id,
+          position_name: position.name,
+          domestic_daily_allowance: position.domesticDailyAllowance,
+          domestic_accommodation_allowance: position.domesticAccommodation,
+          domestic_transportation_allowance: position.domesticTransportation,
+          overseas_daily_allowance: position.overseasDailyAllowance,
+          overseas_accommodation_allowance: position.overseasAccommodation,
+          overseas_preparation_allowance: position.overseasPreparation,
+          overseas_transportation_allowance: position.overseasTransportation
+        }));
+
+        const { error: positionsError } = await supabase
+          .from('regulation_positions')
+          .insert(positionsToInsert);
+
+        if (positionsError) throw positionsError;
+
+        alert('出張規程が正常に作成されました！');
+      }
+      
       onNavigate('travel-regulation-management');
     } catch (err: any) {
       console.error('出張規程の保存エラー:', err);
       setError(err.message || '出張規程の保存に失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 編集モードの場合、既存データを読み込み
+  useEffect(() => {
+    const editingId = localStorage.getItem('editingRegulationId');
+    if (editingId && user) {
+      loadExistingRegulation(editingId);
+    }
+  }, [user]);
+
+  const loadExistingRegulation = async (regulationId: string) => {
+    try {
+      // 規程データを取得
+      const { data: regulation, error: regulationError } = await supabase
+        .from('travel_expense_regulations')
+        .select()
+        .eq('id', regulationId)
+        .single();
+
+      if (regulationError) throw regulationError;
+
+      // 役職データを取得
+      const { data: positions, error: positionsError } = await supabase
+        .from('regulation_positions')
+        .select('*')
+        .eq('regulation_id', regulationId);
+
+      if (positionsError) throw positionsError;
+
+      // フォームデータを設定
+      setData({
+        companyInfo: {
+          name: regulation.company_name || '',
+          address: regulation.company_address || '',
+          representative: regulation.representative || '',
+          establishedDate: regulation.implementation_date || '',
+          revision: regulation.revision_number || 1
+        },
+        distanceThreshold: regulation.distance_threshold || 50,
+        isTransportationRealExpense: regulation.is_transportation_real_expense || false,
+        isAccommodationRealExpense: regulation.is_accommodation_real_expense || false,
+        positions: (positions || []).map(pos => ({
+          id: pos.id,
+          name: pos.position_name,
+          domesticDailyAllowance: pos.domestic_daily_allowance || 0,
+          domesticAccommodation: pos.domestic_accommodation_allowance || 0,
+          domesticTransportation: pos.domestic_transportation_allowance || 0,
+          overseasDailyAllowance: pos.overseas_daily_allowance || 0,
+          overseasAccommodation: pos.overseas_accommodation_allowance || 0,
+          overseasPreparation: pos.overseas_preparation_allowance || 0,
+          overseasTransportation: pos.overseas_transportation_allowance || 0
+        })),
+        implementationDate: regulation.implementation_date || new Date().toISOString().split('T')[0]
+      });
+    } catch (err: any) {
+      console.error('既存規程の読み込みエラー:', err);
+      setError('既存規程の読み込みに失敗しました: ' + err.message);
     }
   };
 
