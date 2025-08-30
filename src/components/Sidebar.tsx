@@ -73,11 +73,11 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
       fixed lg:relative z-40 lg:z-auto
       w-64 h-full 
     `}>
-    <div className="w-64 h-screen backdrop-blur-xl bg-white/20 border-r border-white/30 flex flex-col shadow-2xl relative overflow-hidden z-30">
+    <div className="w-64 h-screen backdrop-blur-xl bg-white/20 border-r border-white/30 flex flex-col shadow-2xl relative overflow-hidden z-10">
       {/* Glass effect overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/10 to-white/5 backdrop-blur-xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/10 to-white/5 backdrop-blur-xl z-0"></div>
       
-      <div className="p-4 lg:p-6 flex-shrink-0">
+      <div className="p-4 lg:p-6 flex-shrink-0 relative z-10">
         <div className="flex items-center justify-between relative z-10">
           <button
             onClick={onClose}
