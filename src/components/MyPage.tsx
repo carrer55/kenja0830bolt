@@ -12,10 +12,16 @@ interface MyPageProps {
 interface AllowanceSettings {
   domestic_daily_allowance: number;
   overseas_daily_allowance: number;
-  transportation_daily_allowance: number;
-  accommodation_daily_allowance: number;
-  use_transportation_allowance: boolean;
-  use_accommodation_allowance: boolean;
+  domestic_transportation_daily_allowance: number;
+  domestic_accommodation_daily_allowance: number;
+  overseas_transportation_daily_allowance: number;
+  overseas_accommodation_daily_allowance: number;
+  overseas_preparation_allowance: number;
+  domestic_use_transportation_allowance: boolean;
+  domestic_use_accommodation_allowance: boolean;
+  overseas_use_transportation_allowance: boolean;
+  overseas_use_accommodation_allowance: boolean;
+  overseas_use_preparation_allowance: boolean;
 }
 
 function MyPage({ onNavigate }: MyPageProps) {
@@ -23,6 +29,7 @@ function MyPage({ onNavigate }: MyPageProps) {
   const { user } = authState;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [allowanceTab, setAllowanceTab] = useState('domestic');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   
@@ -38,10 +45,16 @@ function MyPage({ onNavigate }: MyPageProps) {
   const [allowanceSettings, setAllowanceSettings] = useState<AllowanceSettings>({
     domestic_daily_allowance: 15000,
     overseas_daily_allowance: 25000,
-    transportation_daily_allowance: 6000,
-    accommodation_daily_allowance: 16000,
-    use_transportation_allowance: true,
-    use_accommodation_allowance: true
+    domestic_transportation_daily_allowance: 6000,
+    domestic_accommodation_daily_allowance: 16000,
+    overseas_transportation_daily_allowance: 8000,
+    overseas_accommodation_daily_allowance: 20000,
+    overseas_preparation_allowance: 5000,
+    domestic_use_transportation_allowance: true,
+    domestic_use_accommodation_allowance: true,
+    overseas_use_transportation_allowance: true,
+    overseas_use_accommodation_allowance: true,
+    overseas_use_preparation_allowance: true
   });
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -110,10 +123,16 @@ function MyPage({ onNavigate }: MyPageProps) {
         setAllowanceSettings({
           domestic_daily_allowance: data.domestic_daily_allowance || 15000,
           overseas_daily_allowance: data.overseas_daily_allowance || 25000,
-          transportation_daily_allowance: data.transportation_daily_allowance || 6000,
-          accommodation_daily_allowance: data.accommodation_daily_allowance || 16000,
-          use_transportation_allowance: data.use_transportation_allowance ?? true,
-          use_accommodation_allowance: data.use_accommodation_allowance ?? true
+          domestic_transportation_daily_allowance: data.domestic_transportation_daily_allowance || 6000,
+          domestic_accommodation_daily_allowance: data.domestic_accommodation_daily_allowance || 16000,
+          overseas_transportation_daily_allowance: data.overseas_transportation_daily_allowance || 8000,
+          overseas_accommodation_daily_allowance: data.overseas_accommodation_daily_allowance || 20000,
+          overseas_preparation_allowance: data.overseas_preparation_allowance || 5000,
+          domestic_use_transportation_allowance: data.domestic_use_transportation_allowance ?? true,
+          domestic_use_accommodation_allowance: data.domestic_use_accommodation_allowance ?? true,
+          overseas_use_transportation_allowance: data.overseas_use_transportation_allowance ?? true,
+          overseas_use_accommodation_allowance: data.overseas_use_accommodation_allowance ?? true,
+          overseas_use_preparation_allowance: data.overseas_use_preparation_allowance ?? true
         });
       }
     } catch (err) {
@@ -353,111 +372,41 @@ function MyPage({ onNavigate }: MyPageProps) {
 
   const renderAllowanceTab = () => (
     <div className="space-y-6">
+      {/* タブナビゲーション */}
+      <div className="flex border-b border-white/30">
+        <button
+          onClick={() => setAllowanceTab('domestic')}
+          className={`flex items-center space-x-2 px-6 py-3 font-medium transition-all duration-200 ${
+            allowanceTab === 'domestic'
+              ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
+              : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
+          }`}
+        >
+          <span>国内出張</span>
+        </button>
+        <button
+          onClick={() => setAllowanceTab('overseas')}
+          className={`flex items-center space-x-2 px-6 py-3 font-medium transition-all duration-200 ${
+            allowanceTab === 'overseas'
+              ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
+              : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
+          }`}
+        >
+          <span>海外出張</span>
+        </button>
+      </div>
+
       <div className="bg-blue-50/50 border border-blue-200/50 rounded-lg p-4 mb-6">
-        <h3 className="font-semibold text-blue-800 mb-2">日当設定について</h3>
+        <h3 className="font-semibold text-blue-800 mb-2">
+          {allowanceTab === 'domestic' ? '国内出張' : '海外出張'}日当設定について
+        </h3>
         <p className="text-blue-700 text-sm">
           ここで設定した日当額は、出張申請時の自動計算に使用されます。
           会社の出張規程に合わせて適切な金額を設定してください。
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            <Calculator className="w-4 h-4 inline mr-1" />
-            国内出張日当（円）
-          </label>
-          <input
-            type="number"
-            value={allowanceSettings.domestic_daily_allowance}
-            onChange={(e) => setAllowanceSettings(prev => ({ 
-              ...prev, 
-              domestic_daily_allowance: parseInt(e.target.value) || 0 
-            }))}
-            className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
-            min="0"
-            step="1000"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            <Calculator className="w-4 h-4 inline mr-1" />
-            海外出張日当（円）
-          </label>
-          <input
-            type="number"
-            value={allowanceSettings.overseas_daily_allowance}
-            onChange={(e) => setAllowanceSettings(prev => ({ 
-              ...prev, 
-              overseas_daily_allowance: parseInt(e.target.value) || 0 
-            }))}
-            className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
-            min="0"
-            step="1000"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            交通費日当（円）
-          </label>
-          <input
-            type="number"
-            value={allowanceSettings.transportation_daily_allowance}
-            onChange={(e) => setAllowanceSettings(prev => ({ 
-              ...prev, 
-              transportation_daily_allowance: parseInt(e.target.value) || 0 
-            }))}
-            className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
-            min="0"
-            step="1000"
-            disabled={!allowanceSettings.use_transportation_allowance}
-          />
-          <label className="flex items-center mt-2">
-            <input
-              type="checkbox"
-              checked={allowanceSettings.use_transportation_allowance}
-              onChange={(e) => setAllowanceSettings(prev => ({ 
-                ...prev, 
-                use_transportation_allowance: e.target.checked 
-              }))}
-              className="mr-2"
-            />
-            <span className="text-sm text-slate-600">交通費日当を使用する</span>
-          </label>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            宿泊費日当（円）
-          </label>
-          <input
-            type="number"
-            value={allowanceSettings.accommodation_daily_allowance}
-            onChange={(e) => setAllowanceSettings(prev => ({ 
-              ...prev, 
-              accommodation_daily_allowance: parseInt(e.target.value) || 0 
-            }))}
-            className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
-            min="0"
-            step="1000"
-            disabled={!allowanceSettings.use_accommodation_allowance}
-          />
-          <label className="flex items-center mt-2">
-            <input
-              type="checkbox"
-              checked={allowanceSettings.use_accommodation_allowance}
-              onChange={(e) => setAllowanceSettings(prev => ({ 
-                ...prev, 
-                use_accommodation_allowance: e.target.checked 
-              }))}
-              className="mr-2"
-            />
-            <span className="text-sm text-slate-600">宿泊費日当を使用する</span>
-          </label>
-        </div>
-      </div>
+      {allowanceTab === 'domestic' ? renderDomesticAllowanceSettings() : renderOverseasAllowanceSettings()}
 
       <div className="flex justify-end">
         <button
@@ -472,6 +421,220 @@ function MyPage({ onNavigate }: MyPageProps) {
           )}
           <span>{loading ? '保存中...' : '日当設定を保存'}</span>
         </button>
+      </div>
+    </div>
+  );
+
+  const renderDomesticAllowanceSettings = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          <Calculator className="w-4 h-4 inline mr-1" />
+          出張日当（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.domestic_daily_allowance}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            domestic_daily_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
+          min="0"
+          step="1000"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          交通費日当（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.domestic_use_transportation_allowance ? allowanceSettings.domestic_transportation_daily_allowance : 0}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            domestic_transportation_daily_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl ${
+            allowanceSettings.domestic_use_transportation_allowance
+              ? 'bg-white/50 border-white/40 text-slate-700'
+              : 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+          }`}
+          min="0"
+          step="1000"
+          disabled={!allowanceSettings.domestic_use_transportation_allowance}
+        />
+        <label className="flex items-center mt-2">
+          <input
+            type="checkbox"
+            checked={!allowanceSettings.domestic_use_transportation_allowance}
+            onChange={(e) => setAllowanceSettings(prev => ({ 
+              ...prev, 
+              domestic_use_transportation_allowance: !e.target.checked 
+            }))}
+            className="mr-2"
+          />
+          <span className="text-sm text-slate-600">日当を使用しない</span>
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          宿泊料（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.domestic_use_accommodation_allowance ? allowanceSettings.domestic_accommodation_daily_allowance : 0}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            domestic_accommodation_daily_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl ${
+            allowanceSettings.domestic_use_accommodation_allowance
+              ? 'bg-white/50 border-white/40 text-slate-700'
+              : 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+          }`}
+          min="0"
+          step="1000"
+          disabled={!allowanceSettings.domestic_use_accommodation_allowance}
+        />
+        <label className="flex items-center mt-2">
+          <input
+            type="checkbox"
+            checked={!allowanceSettings.domestic_use_accommodation_allowance}
+            onChange={(e) => setAllowanceSettings(prev => ({ 
+              ...prev, 
+              domestic_use_accommodation_allowance: !e.target.checked 
+            }))}
+            className="mr-2"
+          />
+          <span className="text-sm text-slate-600">日当を使用しない</span>
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderOverseasAllowanceSettings = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          <Calculator className="w-4 h-4 inline mr-1" />
+          出張日当（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.overseas_daily_allowance}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            overseas_daily_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
+          min="0"
+          step="1000"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          交通費日当（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.overseas_use_transportation_allowance ? allowanceSettings.overseas_transportation_daily_allowance : 0}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            overseas_transportation_daily_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl ${
+            allowanceSettings.overseas_use_transportation_allowance
+              ? 'bg-white/50 border-white/40 text-slate-700'
+              : 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+          }`}
+          min="0"
+          step="1000"
+          disabled={!allowanceSettings.overseas_use_transportation_allowance}
+        />
+        <label className="flex items-center mt-2">
+          <input
+            type="checkbox"
+            checked={!allowanceSettings.overseas_use_transportation_allowance}
+            onChange={(e) => setAllowanceSettings(prev => ({ 
+              ...prev, 
+              overseas_use_transportation_allowance: !e.target.checked 
+            }))}
+            className="mr-2"
+          />
+          <span className="text-sm text-slate-600">日当を使用しない</span>
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          宿泊料（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.overseas_use_accommodation_allowance ? allowanceSettings.overseas_accommodation_daily_allowance : 0}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            overseas_accommodation_daily_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl ${
+            allowanceSettings.overseas_use_accommodation_allowance
+              ? 'bg-white/50 border-white/40 text-slate-700'
+              : 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+          }`}
+          min="0"
+          step="1000"
+          disabled={!allowanceSettings.overseas_use_accommodation_allowance}
+        />
+        <label className="flex items-center mt-2">
+          <input
+            type="checkbox"
+            checked={!allowanceSettings.overseas_use_accommodation_allowance}
+            onChange={(e) => setAllowanceSettings(prev => ({ 
+              ...prev, 
+              overseas_use_accommodation_allowance: !e.target.checked 
+            }))}
+            className="mr-2"
+          />
+          <span className="text-sm text-slate-600">日当を使用しない</span>
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          支度料（円）
+        </label>
+        <input
+          type="number"
+          value={allowanceSettings.overseas_use_preparation_allowance ? allowanceSettings.overseas_preparation_allowance : 0}
+          onChange={(e) => setAllowanceSettings(prev => ({ 
+            ...prev, 
+            overseas_preparation_allowance: parseInt(e.target.value) || 0 
+          }))}
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl ${
+            allowanceSettings.overseas_use_preparation_allowance
+              ? 'bg-white/50 border-white/40 text-slate-700'
+              : 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+          }`}
+          min="0"
+          step="1000"
+          disabled={!allowanceSettings.overseas_use_preparation_allowance}
+        />
+        <label className="flex items-center mt-2">
+          <input
+            type="checkbox"
+            checked={!allowanceSettings.overseas_use_preparation_allowance}
+            onChange={(e) => setAllowanceSettings(prev => ({ 
+              ...prev, 
+              overseas_use_preparation_allowance: !e.target.checked 
+            }))}
+            className="mr-2"
+          />
+          <span className="text-sm text-slate-600">日当を使用しない</span>
+        </label>
       </div>
     </div>
   );
