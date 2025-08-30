@@ -319,7 +319,7 @@ function MyPage({ onNavigate }: MyPageProps) {
     { id: 'plan', label: 'プラン管理', icon: CreditCard }
   ];
 
-  const renderProfileTab = useMemo(() => (
+  const renderProfileTab = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -403,17 +403,16 @@ function MyPage({ onNavigate }: MyPageProps) {
       <div className="flex justify-end">
         <button
           onClick={handleProfileSave}
-          disabled={isLoading}
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
         >
           <Save className="w-5 h-5" />
-          <span>{isLoading ? '保存中...' : '保存'}</span>
+          <span>保存</span>
         </button>
       </div>
     </div>
-  ), [userProfile, isLoading, showPasswordChange, handleProfileSave]);
+  ), [userProfile, handleProfileSave, isLoading]);
 
-  const renderAllowancesTab = () => (
+  const renderAllowancesTab = useMemo(() => (
     <div className="space-y-6">
       {/* 国内・海外タブ */}
       <div className="flex space-x-1 mb-6 bg-white/30 rounded-lg p-1">
@@ -746,14 +745,15 @@ function MyPage({ onNavigate }: MyPageProps) {
       <div className="flex justify-end">
         <button
           onClick={handleAllowancesSave}
+          disabled={isLoading}
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
         >
           <Save className="w-5 h-5" />
-          <span>日当設定を保存</span>
+          <span>{isLoading ? '保存中...' : '日当設定を保存'}</span>
         </button>
       </div>
     </div>
-  );
+  ), [allowanceTab, userProfile, handleAllowancesSave, isLoading]);
 
   const renderNotificationsTab = () => (
     <div className="space-y-6">
@@ -980,8 +980,8 @@ function MyPage({ onNavigate }: MyPageProps) {
 
               {/* タブコンテンツ */}
               <div className="backdrop-blur-xl bg-white/20 rounded-xl p-6 border border-white/30 shadow-xl">
-                {activeTab === 'profile' && renderProfileTab}
-                {activeTab === 'allowances' && renderAllowancesTab()}
+                {activeTab === 'profile' && renderProfileTab()}
+                {activeTab === 'allowances' && renderAllowancesTab}
                 {activeTab === 'notifications' && renderNotificationsTab()}
                 {activeTab === 'accounting' && renderAccountingTab()}
                 {activeTab === 'users' && renderUsersTab()}
