@@ -129,17 +129,6 @@ function MyPage({ onNavigate }: MyPageProps) {
         }
       });
     }
-  }, [userData.profile]);
-
-  useEffect(() => {
-    initializeProfile();
-  }, [initializeProfile]);
-
-  useEffect(() => {
-    if (userData.profile) {
-      loadAllowanceSettings();
-    }
-  }, [userData.profile?.id]);
 
   // 日当設定を読み込む関数
   const loadAllowanceSettings = async () => {
@@ -183,15 +172,17 @@ function MyPage({ onNavigate }: MyPageProps) {
       console.log('日当設定の読み込みに失敗しました（新規ユーザーの可能性）:', err);
     }
   };
+  }, [userData.profile]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleProfileSave = async () => {
+  const handleProfileSave = useCallback(async () => {
     if (!userData.profile) return;
     
     try {
+      setIsLoading(true);
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -215,10 +206,12 @@ function MyPage({ onNavigate }: MyPageProps) {
     } catch (err) {
       alert('プロフィールの更新に失敗しました');
       console.error('Profile update error:', err);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [userData.profile, userProfile, refreshData]);
 
-  const handleAllowancesSave = async () => {
+  const handleAllowancesSave = useCallback(async () => {
     console.log('handleAllowancesSave called');
     
     if (!userData.profile) {
@@ -232,6 +225,7 @@ function MyPage({ onNavigate }: MyPageProps) {
     console.log('Current allowance flags:', userProfile.allowanceFlags);
     
     try {
+      setIsLoading(true);
       // 既存の設定を確認
       const { data: existingSettings, error: selectError } = await supabase
         .from('allowance_settings')
@@ -311,14 +305,16 @@ function MyPage({ onNavigate }: MyPageProps) {
     } catch (err) {
       console.error('Unexpected error in handleAllowancesSave:', err);
       alert('日当設定の保存に失敗しました: ' + (err instanceof Error ? err.message : '不明なエラー'));
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [userData.profile, userProfile, loadAllowanceSettings]);
 
 
-  const handleNotificationSave = () => {
+  const handleNotificationSave = useCallback(() => {
     localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
     alert('通知設定が更新されました');
-  };
+  }, [notificationSettings]);
 
 
   const tabs = [
