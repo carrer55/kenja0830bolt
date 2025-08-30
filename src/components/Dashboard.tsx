@@ -123,7 +123,9 @@ function Dashboard() {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-              <TopBar onMenuClick={toggleSidebar} onNavigate={navigateToView} />
+              <div className="w-full">
+                <TopBar onMenuClick={toggleSidebar} onNavigate={navigateToView} />
+              </div>
               <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
             </div>
           </div>

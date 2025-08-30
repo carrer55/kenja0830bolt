@@ -80,13 +80,6 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
       
       <div className="p-4 lg:p-6 flex-shrink-0">
         <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center space-x-3">
-            <img 
-              src="/賢者の精算Logo2_Transparent_NoBuffer copy.png" 
-              alt="賢者の精算ロゴ" 
-              className="w-32 h-12 lg:w-48 lg:h-20 object-contain"
-            />
-          </div>
           <button
             onClick={onClose}
             className="lg:hidden p-1 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-all duration-200"

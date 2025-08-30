@@ -34,12 +34,21 @@ function TopBar({ onMenuClick, onNavigate }: TopBarProps) {
   const unreadCount = getUnreadNotificationCount();
 
   return (
-    <div className="h-16 backdrop-blur-xl bg-white/10 border-b border-white/20 flex items-center justify-between px-4 lg:px-6 shadow-xl relative overflow-hidden">
+    <div className="h-16 backdrop-blur-xl bg-white/10 border-b border-white/20 flex items-center justify-between px-4 lg:px-6 shadow-xl relative overflow-hidden w-full">
       {/* Glass effect overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 backdrop-blur-xl"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/20 to-indigo-50/20"></div>
       
       <div className="flex items-center space-x-4">
+        {/* Logo */}
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/賢者の精算Logo2_Transparent_NoBuffer copy.png" 
+            alt="賢者の精算ロゴ" 
+            className="w-32 h-8 lg:w-40 lg:h-10 object-contain"
+          />
+        </div>
+        
         <button
           onClick={onMenuClick}
           className="lg:hidden p-3 text-gray-600 hover:text-gray-800 hover:bg-white/30 rounded-lg transition-all duration-200 backdrop-blur-sm hover:shadow-lg relative z-10 touch-manipulation"
