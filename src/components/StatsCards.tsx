@@ -45,11 +45,11 @@ function StatsCards() {
     },
     {
       title: '今月の精算合計',
-      value: `${userData.stats.pendingApplications + userData.stats.approvedApplications}件`,
-      trend: `承認済み${userData.stats.approvedApplications}件`,
+      value: `¥${(userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips).toLocaleString()}`,
+      trend: `承認済み¥${userData.stats.approvedApplications > 0 ? (userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips).toLocaleString() : '0'}`,
       trendUp: userData.stats.approvedApplications > 0,
       chartColor: 'from-gray-600 to-gray-800',
-      data: userData.stats.pendingApplications + userData.stats.approvedApplications
+      data: userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips
     }
   ];
 

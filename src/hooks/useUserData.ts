@@ -15,6 +15,7 @@ export interface UserData {
     monthlyBusinessTrips: number;
     pendingApplications: number;
     approvedApplications: number;
+    approvedAmount: number;
   };
 }
 
