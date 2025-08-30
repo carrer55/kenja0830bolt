@@ -169,7 +169,14 @@ export function useUserData() {
     const approvedAmount = [
       ...userData.applications.expense.filter(app => app.status === 'approved'),
       ...userData.applications.businessTrip.filter(app => app.status === 'approved')
-    ].reduce((sum, app) => sum + (app.amount || app.estimated_cost || 0), 0);
+    ].reduce((sum, app) => {
+      if ('amount' in app) {
+        return sum + app.amount;
+      } else if ('estimated_cost' in app) {
+        return sum + app.estimated_cost;
+      }
+      return sum;
+    }, 0);
 
     setUserData(prev => ({
       ...prev,
@@ -205,10 +212,12 @@ export function useUserData() {
     }
   }, [isAuthenticated, user?.id, fetchUserProfile, fetchExpenseApplications, fetchBusinessTripApplications, fetchNotifications]);
 
-  // 統計データを更新
+  // 統計データを更新（依存関係を修正）
   useEffect(() => {
-    calculateStats();
-  }, [userData.applications, calculateStats]);
+    if (userData.applications.expense.length > 0 || userData.applications.businessTrip.length > 0) {
+      calculateStats();
+    }
+  }, [userData.applications.expense, userData.applications.businessTrip]);
 
   // 認証状態が変更されたときにデータを取得
   useEffect(() => {

@@ -304,10 +304,10 @@ function ExpenseApplication({ onNavigate }: ExpenseApplicationProps) {
                             </select>
                           </div>
 
-                                                     <div>
-                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                               申請日 <span className="text-red-500">*</span>
-                             </label>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              申請日 <span className="text-red-500">*</span>
+                            </label>
                             <input
                               type="date"
                               value={item.date}
@@ -333,10 +333,10 @@ function ExpenseApplication({ onNavigate }: ExpenseApplicationProps) {
                             />
                           </div>
 
-                                                     <div>
-                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                               詳細説明（任意）
-                             </label>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              詳細説明（任意）
+                            </label>
                             <input
                               type="text"
                               value={item.description}
