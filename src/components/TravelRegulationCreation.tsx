@@ -226,7 +226,7 @@ ${data.companyInfo.representative}`;
             revision_number: data.companyInfo.revision,
             is_transportation_real_expense: data.isTransportationRealExpense,
             is_accommodation_real_expense: data.isAccommodationRealExpense,
-            regulation_full_text: generateRegulationText(),
+            regulation_text: generateRegulationText(),
             status: 'active',
             updated_at: new Date().toISOString()
           })
@@ -279,7 +279,7 @@ ${data.companyInfo.representative}`;
             revision_number: data.companyInfo.revision,
             is_transportation_real_expense: data.isTransportationRealExpense,
             is_accommodation_real_expense: data.isAccommodationRealExpense,
-            regulation_full_text: generateRegulationText(),
+            regulation_text: generateRegulationText(),
             status: 'active'
           })
           .select()
@@ -331,7 +331,7 @@ ${data.companyInfo.representative}`;
       // 規程データを取得
       const { data: regulation, error: regulationError } = await supabase
         .from('travel_expense_regulations')
-        .select()
+        .select('*')
         .eq('id', regulationId)
         .single();
 
@@ -351,7 +351,7 @@ ${data.companyInfo.representative}`;
           name: regulation.company_name || '',
           address: regulation.company_address || '',
           representative: regulation.representative || '',
-          establishedDate: regulation.implementation_date || '',
+          establishedDate: regulation.implementation_date || new Date().toISOString().split('T')[0],
           revision: regulation.revision_number || 1
         },
         distanceThreshold: regulation.distance_threshold || 50,

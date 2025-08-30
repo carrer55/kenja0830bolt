@@ -39,6 +39,7 @@ function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementPr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
+  // 規程データを読み込み
   useEffect(() => {
     if (user) {
       loadRegulations();
@@ -55,14 +56,7 @@ function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementPr
       // 出張規程とその役職別設定を取得
       const { data: regulationsData, error: regulationsError } = await supabase
         .from('travel_expense_regulations')
-        .select(`
-          *,
-          positions:regulation_positions(
-            position_name,
-            domestic_daily_allowance,
-            overseas_daily_allowance
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -70,20 +64,39 @@ function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementPr
         throw regulationsError;
       }
 
-      const formattedRegulations: RegulationWithPositions[] = (regulationsData || []).map(reg => ({
-        id: reg.id,
-        regulation_name: reg.regulation_name,
-        company_name: reg.company_name || '',
-        company_address: reg.company_address || '',
-        representative: reg.representative || '',
-        distance_threshold: reg.distance_threshold || 50,
-        implementation_date: reg.implementation_date || '',
-        revision_number: reg.revision_number || 1,
-        status: reg.status || 'draft',
-        createdAt: reg.created_at,
-        updatedAt: reg.updated_at,
-        positions: (reg as any).positions || []
-      }));
+      // 各規程の役職データを個別に取得
+      const formattedRegulations: RegulationWithPositions[] = [];
+      
+      for (const reg of regulationsData || []) {
+        // 役職データを取得
+        const { data: positionsData, error: positionsError } = await supabase
+          .from('regulation_positions')
+          .select('*')
+          .eq('regulation_id', reg.id);
+
+        if (positionsError) {
+          console.error('役職データの取得エラー:', positionsError);
+        }
+
+        formattedRegulations.push({
+          id: reg.id,
+          regulation_name: reg.regulation_name,
+          company_name: reg.company_name || '',
+          company_address: reg.company_address || '',
+          representative: reg.representative || '',
+          distance_threshold: reg.distance_threshold || 50,
+          implementation_date: reg.implementation_date || '',
+          revision_number: reg.revision_number || 1,
+          status: reg.status || 'draft',
+          createdAt: reg.created_at,
+          updatedAt: reg.updated_at,
+          positions: (positionsData || []).map(pos => ({
+            position_name: pos.position_name,
+            domestic_daily_allowance: pos.domestic_daily_allowance || 0,
+            overseas_daily_allowance: pos.overseas_daily_allowance || 0
+          }))
+        });
+      }
 
       setRegulations(formattedRegulations);
     } catch (err: any) {
@@ -93,6 +106,7 @@ function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementPr
       setLoading(false);
     }
   };
+  
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -105,6 +119,7 @@ function TravelRegulationManagement({ onNavigate }: TravelRegulationManagementPr
   const handleDelete = async (id: string) => {
     if (confirm('この規程を削除してもよろしいですか？')) {
       try {
+        // 関連する役職データも自動的に削除される（CASCADE）
         const { error } = await supabase
           .from('travel_expense_regulations')
           .delete()
@@ -409,8 +424,8 @@ ${regulation.representative}`;
                                 <div className="space-y-1">
                                   {regulation.positions.length > 0 ? (
                                     <>
-                                      <div>国内: ¥{regulation.positions[0]?.domestic_daily_allowance?.toLocaleString() || '0'}</div>
-                                      <div>海外: ¥{regulation.positions[0]?.overseas_daily_allowance?.toLocaleString() || '0'}</div>
+                                      <div>国内: ¥{regulation.positions[0]?.domestic_daily_allowance.toLocaleString()}</div>
+                                      <div>海外: ¥{regulation.positions[0]?.overseas_daily_allowance.toLocaleString()}</div>
                                     </>
                                   ) : (
                                     <div className="text-slate-400">未設定</div>
