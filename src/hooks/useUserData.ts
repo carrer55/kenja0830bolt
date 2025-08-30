@@ -30,7 +30,8 @@ export function useUserData() {
       monthlyExpenses: 0,
       monthlyBusinessTrips: 0,
       pendingApplications: 0,
-      approvedApplications: 0
+      approvedApplications: 0,
+      approvedAmount: 0
     }
   });
   const [loading, setLoading] = useState(false);
@@ -136,19 +137,19 @@ export function useUserData() {
   }, [user?.id]);
 
   // 統計データを計算
-  const calculateStats = useCallback((applications: typeof userData.applications) => {
+  const calculateStats = useCallback(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const monthlyExpenses = applications.expense
+    const monthlyExpenses = userData.applications.expense
       .filter(app => {
         const appDate = new Date(app.created_at);
         return appDate.getMonth() === currentMonth && appDate.getFullYear() === currentYear;
       })
       .reduce((sum, app) => sum + app.amount, 0);
 
-    const monthlyBusinessTrips = applications.businessTrip
+    const monthlyBusinessTrips = userData.applications.businessTrip
       .filter(app => {
         const appDate = new Date(app.created_at);
         return appDate.getMonth() === currentMonth && appDate.getFullYear() === currentYear;
@@ -156,14 +157,19 @@ export function useUserData() {
       .reduce((sum, app) => sum + app.estimated_cost, 0);
 
     const pendingApplications = [
-      ...applications.expense.filter(app => app.status === 'pending'),
-      ...applications.businessTrip.filter(app => app.status === 'pending')
+      ...userData.applications.expense.filter(app => app.status === 'pending'),
+      ...userData.applications.businessTrip.filter(app => app.status === 'pending')
     ].length;
 
     const approvedApplications = [
-      ...applications.expense.filter(app => app.status === 'approved'),
-      ...applications.businessTrip.filter(app => app.status === 'approved')
+      ...userData.applications.expense.filter(app => app.status === 'approved'),
+      ...userData.applications.businessTrip.filter(app => app.status === 'approved')
     ].length;
+
+    const approvedAmount = [
+      ...userData.applications.expense.filter(app => app.status === 'approved'),
+      ...userData.applications.businessTrip.filter(app => app.status === 'approved')
+    ].reduce((sum, app) => sum + (app.amount || app.estimated_cost || 0), 0);
 
     setUserData(prev => ({
       ...prev,
@@ -171,11 +177,11 @@ export function useUserData() {
         monthlyExpenses,
         monthlyBusinessTrips,
         pendingApplications,
-        approvedApplications
+        approvedApplications,
+        approvedAmount
       }
     }));
-  }
-  )
+  }, [userData.applications]);
 
   // 全データを取得
   const fetchAllData = useCallback(async () => {
@@ -202,7 +208,7 @@ export function useUserData() {
   // 統計データを更新
   useEffect(() => {
     calculateStats();
-  }, [calculateStats]);
+  }, [userData.applications, calculateStats]);
 
   // 認証状態が変更されたときにデータを取得
   useEffect(() => {
