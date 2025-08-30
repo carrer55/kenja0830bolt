@@ -129,6 +129,17 @@ function MyPage({ onNavigate }: MyPageProps) {
         }
       });
     }
+  }, [userData.profile]);
+
+  useEffect(() => {
+    initializeProfile();
+  }, [initializeProfile]);
+
+  useEffect(() => {
+    if (userData.profile) {
+      loadAllowanceSettings();
+    }
+  }, [userData.profile?.id]);
 
   // 日当設定を読み込む関数
   const loadAllowanceSettings = async () => {
