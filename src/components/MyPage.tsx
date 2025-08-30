@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Settings, CreditCard, Bell, Users, Edit, Save, Link } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
@@ -54,9 +54,8 @@ function MyPage({ onNavigate }: MyPageProps) {
   const [activeTab, setActiveTab] = useState('profile');
   const [allowanceTab, setAllowanceTab] = useState<'domestic' | 'overseas'>('domestic');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [] = useState(false);
-  const [] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '',
@@ -96,14 +95,8 @@ function MyPage({ onNavigate }: MyPageProps) {
     approvalOnly: false
   });
 
-  const [] = useState({
-    current: '',
-    new: '',
-    confirm: ''
-  });
-
   // ユーザーデータからプロフィール情報を取得
-  useEffect(() => {
+  const initializeProfile = useCallback(() => {
     if (userData.profile) {
       setUserProfile({
         name: userData.profile.full_name || '',
@@ -135,11 +128,7 @@ function MyPage({ onNavigate }: MyPageProps) {
           usePreparation: true
         }
       });
-
-      // 既存の日当設定を読み込み
-      loadAllowanceSettings();
     }
-  }, [userData.profile]);
 
   // 日当設定を読み込む関数
   const loadAllowanceSettings = async () => {
