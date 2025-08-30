@@ -216,64 +216,14 @@ ${data.companyInfo.representative}`;
           user_id: user.id,
           regulation_name: `${data.companyInfo.name} 出張旅費規程`,
           regulation_type: 'domestic',
-          company_name: data.companyInfo.name,
-          company_address: data.companyInfo.address,
-          representative: data.companyInfo.representative,
-          implementation_date: data.implementationDate,
-          revision_number: data.companyInfo.revision,
-          distance_threshold: data.distanceThreshold,
-          company_name: data.companyInfo.name,
-          company_address: data.companyInfo.address,
-          representative: data.companyInfo.representative,
-          implementation_date: data.implementationDate,
-          revision_number: data.companyInfo.revision,
-          distance_threshold: data.distanceThreshold,
-          is_transportation_real_expense: data.isTransportationRealExpense,
-          is_accommodation_real_expense: data.isAccommodationRealExpense,
-          regulation_full_text: generateRegulationText(),
-          status: 'draft',
+          transportation_real_expense: data.isTransportationRealExpense,
+          accommodation_real_expense: data.isAccommodationRealExpense,
           position_allowances: data.positions
-        } as any)
+        })
         .select()
         .single();
 
       if (regulationError) throw regulationError;
-
-      // 2. 役職別日当データを保存
-      const positionData = data.positions.map((position, index) => ({
-        regulation_id: regulation.id,
-        position_name: position.name,
-        sort_order: index,
-        domestic_daily_allowance: position.domesticDailyAllowance,
-        domestic_accommodation: position.domesticAccommodation,
-        domestic_transportation: position.domesticTransportation,
-        overseas_daily_allowance: position.overseasDailyAllowance,
-        overseas_accommodation: position.overseasAccommodation,
-        overseas_preparation: position.overseasPreparation,
-        overseas_transportation: position.overseasTransportation
-      }));
-
-      const { error: positionsError } = await supabase
-        .from('regulation_positions')
-        .insert(positionData as any);
-
-      if (positionsError) throw positionsError;
-
-      // 3. バージョン履歴を保存
-      const { error: versionError } = await supabase
-        .from('regulation_versions')
-        .insert({
-          regulation_id: regulation.id,
-          version_number: `v${data.companyInfo.revision}.0`,
-          changes: ['新規作成'],
-          created_by: user.id,
-          regulation_snapshot: {
-            ...data,
-            regulationText: generateRegulationText()
-          }
-        } as any);
-
-      if (versionError) throw versionError;
 
       alert('出張規程が正常に保存されました！');
       onNavigate('travel-regulation-management');
