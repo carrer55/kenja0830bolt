@@ -58,7 +58,7 @@ function BusinessTripApplication({ onNavigate }: BusinessTripApplicationProps) {
           .from('allowance_settings')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.log('Error loading allowance settings:', error);

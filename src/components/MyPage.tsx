@@ -109,7 +109,7 @@ function MyPage({ onNavigate }: MyPageProps) {
         .from('allowance_settings')
         .select('*')
         .eq('user_id', userData.profile.id)
-        .single();
+        .maybeSingle();
 
       if (existingSettings) {
         setUserProfile(prev => ({
