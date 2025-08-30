@@ -397,6 +397,7 @@ function DocumentManagement({ onNavigate }: DocumentManagementProps) {
                     </div>
                   )}
                 </>
+              )}
             </div>
 
             {/* 高度検索モーダル */}
