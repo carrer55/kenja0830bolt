@@ -66,15 +66,6 @@ function Login({ onNavigate, onLoginSuccess }: LoginProps) {
                 </div>
               )}
 
-              {/* デモアカウント案内 */}
-              <div className="bg-blue-50/50 border border-blue-200/50 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-800 mb-2">デモアカウント</h3>
-                <p className="text-blue-700 text-sm mb-2">
-                  メールアドレス: <code className="bg-blue-100 px-1 rounded">demo</code><br />
-                  パスワード: <code className="bg-blue-100 px-1 rounded">pass9981</code>
-                </p>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   メールアドレス
