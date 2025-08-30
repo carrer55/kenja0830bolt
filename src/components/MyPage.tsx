@@ -410,9 +410,9 @@ function MyPage({ onNavigate }: MyPageProps) {
         </button>
       </div>
     </div>
-  ), [userProfile, handleProfileSave, isLoading]);
+  );
 
-  const renderAllowancesTab = useMemo(() => (
+  const renderAllowancesTab = () => (
     <div className="space-y-6">
       {/* 国内・海外タブ */}
       <div className="flex space-x-1 mb-6 bg-white/30 rounded-lg p-1">
@@ -745,17 +745,16 @@ function MyPage({ onNavigate }: MyPageProps) {
       <div className="flex justify-end">
         <button
           onClick={handleAllowancesSave}
-          disabled={isLoading}
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
         >
           <Save className="w-5 h-5" />
-          <span>{isLoading ? '保存中...' : '日当設定を保存'}</span>
+          <span>日当設定を保存</span>
         </button>
       </div>
     </div>
   ), [allowanceTab, userProfile, handleAllowancesSave, isLoading]);
 
-  const renderNotificationsTab = () => (
+  const renderNotificationsTab = useMemo(() => (
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between p-4 bg-white/30 rounded-lg">
@@ -831,14 +830,15 @@ function MyPage({ onNavigate }: MyPageProps) {
       <div className="flex justify-end">
         <button
           onClick={handleNotificationSave}
+          disabled={isLoading}
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
         >
           <Save className="w-5 h-5" />
-          <span>通知設定を保存</span>
+          <span>{isLoading ? '保存中...' : '通知設定を保存'}</span>
         </button>
       </div>
     </div>
-  );
+  ), [notificationSettings, handleNotificationSave, isLoading]);
 
   const renderAccountingTab = () => (
     <div className="space-y-6">
@@ -982,7 +982,7 @@ function MyPage({ onNavigate }: MyPageProps) {
               <div className="backdrop-blur-xl bg-white/20 rounded-xl p-6 border border-white/30 shadow-xl">
                 {activeTab === 'profile' && renderProfileTab()}
                 {activeTab === 'allowances' && renderAllowancesTab}
-                {activeTab === 'notifications' && renderNotificationsTab()}
+                {activeTab === 'notifications' && renderNotificationsTab}
                 {activeTab === 'accounting' && renderAccountingTab()}
                 {activeTab === 'users' && renderUsersTab()}
                 {activeTab === 'plan' && renderPlanTab()}
