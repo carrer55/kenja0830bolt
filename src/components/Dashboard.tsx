@@ -21,6 +21,7 @@ import Help from './Help';
 import Support from './Support';
 import ApplicationStatusList from './ApplicationStatusList';
 import AdminDashboard from './AdminDashboard';
+import BusinessTripReportCreation from './BusinessTripReportCreation';
 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -40,6 +41,9 @@ function Dashboard() {
     }
     if (view === 'document-preview' && param) {
       setDocumentId(param);
+    }
+    if (view === 'business-trip-report-creation') {
+      // No additional parameters needed for this view
     }
   };
 
@@ -86,6 +90,8 @@ function Dashboard() {
         return <ApplicationStatusList onNavigate={navigateToView} onShowDetail={showApplicationDetail} />;
       case 'admin-dashboard':
         return <AdminDashboard onNavigate={navigateToView} />;
+      case 'business-trip-report-creation':
+        return <BusinessTripReportCreation onNavigate={navigateToView} />;
       case 'application-detail':
         return applicationDetail ? (
           <ApplicationDetail 

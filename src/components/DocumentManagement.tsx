@@ -8,7 +8,7 @@ import { supabaseAuth } from '../lib/supabaseAuth';
 import type { Tables } from '../types/supabase';
 
 interface DocumentManagementProps {
-  onNavigate: (view: string, documentType?: string) => void;
+  onNavigate: (view: string, param?: string) => void;
 }
 
 interface Document {
