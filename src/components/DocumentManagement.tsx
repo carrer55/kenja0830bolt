@@ -325,76 +325,78 @@ function DocumentManagement({ onNavigate }: DocumentManagementProps) {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {filteredDocuments.map((document) => (
-                    <div key={document.id} className="backdrop-blur-xl bg-white/10 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 overflow-hidden">
-                      {/* サムネイル */}
-                      <div className="h-24 bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center border-b border-white/10">
-                        <FileText className="w-8 h-8 text-slate-300" />
-                      </div>
-                      
-                      {/* 書類情報 */}
-                      <div className="p-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-medium text-slate-800 text-sm leading-tight line-clamp-2">{document.title}</h3>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(document.status)} ml-2 flex-shrink-0`}>
-                            {getStatusLabel(document.status)}
-                          </span>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {filteredDocuments.map((document) => (
+                      <div key={document.id} className="backdrop-blur-xl bg-white/10 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 overflow-hidden">
+                        {/* サムネイル */}
+                        <div className="h-24 bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center border-b border-white/10">
+                          <FileText className="w-8 h-8 text-slate-300" />
                         </div>
                         
-                        <p className="text-xs text-slate-600 mb-2 line-clamp-1">{getTypeLabel(document.type)}</p>
-                        
-                        <div className="space-y-1 text-xs text-slate-500 mb-3">
-                          <div className="flex justify-between">
-                            <span>作成日:</span>
-                            <span className="text-slate-600">{new Date(document.createdAt).toLocaleDateString('ja-JP')}</span>
+                        {/* 書類情報 */}
+                        <div className="p-3">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="font-medium text-slate-800 text-sm leading-tight line-clamp-2">{document.title}</h3>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(document.status)} ml-2 flex-shrink-0`}>
+                              {getStatusLabel(document.status)}
+                            </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>サイズ:</span>
-                            <span className="text-slate-600">{document.size}</span>
+                          
+                          <p className="text-xs text-slate-600 mb-2 line-clamp-1">{getTypeLabel(document.type)}</p>
+                          
+                          <div className="space-y-1 text-xs text-slate-500 mb-3">
+                            <div className="flex justify-between">
+                              <span>作成日:</span>
+                              <span className="text-slate-600">{new Date(document.createdAt).toLocaleDateString('ja-JP')}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>サイズ:</span>
+                              <span className="text-slate-600">{document.size}</span>
+                            </div>
+                          </div>
+                          
+                          {/* アクションボタン */}
+                          <div className="flex justify-between pt-2 border-t border-white/20">
+                            <button
+                              onClick={() => handlePreviewDocument(document.id)}
+                              className="flex items-center space-x-1 px-2 py-1 text-slate-600 hover:text-slate-800 hover:bg-white/20 rounded transition-colors"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span className="text-xs">表示</span>
+                            </button>
+                            <button
+                              onClick={() => handleCreateDocument(document.type)}
+                              className="flex items-center space-x-1 px-2 py-1 text-slate-600 hover:text-slate-800 hover:bg-white/20 rounded transition-colors"
+                            >
+                              <Edit className="w-3 h-3" />
+                              <span className="text-xs">編集</span>
+                            </button>
+                            <button
+                              onClick={() => handleDownloadDocument(document.id)}
+                              className="flex items-center space-x-1 px-2 py-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100/20 rounded transition-colors"
+                            >
+                              <Download className="w-3 h-3" />
+                              <span className="text-xs">DL</span>
+                            </button>
                           </div>
                         </div>
-                        
-                        {/* アクションボタン */}
-                        <div className="flex justify-between pt-2 border-t border-white/20">
-                          <button
-                            onClick={() => handlePreviewDocument(document.id)}
-                            className="flex items-center space-x-1 px-2 py-1 text-slate-600 hover:text-slate-800 hover:bg-white/20 rounded transition-colors"
-                          >
-                            <Eye className="w-3 h-3" />
-                            <span className="text-xs">表示</span>
-                          </button>
-                          <button
-                            onClick={() => handleCreateDocument(document.type)}
-                            className="flex items-center space-x-1 px-2 py-1 text-slate-600 hover:text-slate-800 hover:bg-white/20 rounded transition-colors"
-                          >
-                            <Edit className="w-3 h-3" />
-                            <span className="text-xs">編集</span>
-                          </button>
-                          <button
-                            onClick={() => handleDownloadDocument(document.id)}
-                            className="flex items-center space-x-1 px-2 py-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100/20 rounded transition-colors"
-                          >
-                            <Download className="w-3 h-3" />
-                            <span className="text-xs">DL</span>
-                          </button>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {filteredDocuments.length === 0 && (
-                  <div className="text-center py-12">
-                    <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 text-base font-medium">
-                      {searchTerm || filterType !== 'all' || filterStatus !== 'all' 
-                        ? '条件に一致する書類が見つかりません' 
-                        : '書類がまだ作成されていません'}
-                    </p>
-                    <p className="text-slate-500 text-sm mt-2">上部のボタンから新しい書類を作成してください</p>
+                    ))}
                   </div>
-                )}
+
+                  {filteredDocuments.length === 0 && (
+                    <div className="text-center py-12">
+                      <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                      <p className="text-slate-600 text-base font-medium">
+                        {searchTerm || filterType !== 'all' || filterStatus !== 'all' 
+                          ? '条件に一致する書類が見つかりません' 
+                          : '書類がまだ作成されていません'}
+                      </p>
+                      <p className="text-slate-500 text-sm mt-2">上部のボタンから新しい書類を作成してください</p>
+                    </div>
+                  )}
+                </>
             </div>
 
             {/* 高度検索モーダル */}
