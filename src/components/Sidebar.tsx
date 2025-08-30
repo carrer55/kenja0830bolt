@@ -71,33 +71,33 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
   return (
     <div className={`
       fixed lg:relative z-40 lg:z-auto
-      w-64 h-full 
+      w-64 h-full lg:h-[calc(100vh-4rem)]
     `}>
-    <div className="w-64 h-screen backdrop-blur-xl bg-white/20 border-r border-white/30 flex flex-col shadow-2xl relative overflow-hidden z-10">
+    <div className="w-64 h-full backdrop-blur-xl bg-white/20 border-r border-white/30 flex flex-col shadow-2xl relative overflow-hidden z-10">
       {/* Glass effect overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/10 to-white/5 backdrop-blur-xl z-0"></div>
       
-      <div className="p-4 lg:p-6 flex-shrink-0 relative z-10">
+      <div className="p-3 sm:p-4 lg:p-6 flex-shrink-0 relative z-10">
         <div className="flex items-center justify-between relative z-10">
           <button
             onClick={onClose}
-            className="lg:hidden p-1 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-all duration-200"
+            className="lg:hidden p-1.5 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-all duration-200"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
         
         {/* ユーザー情報表示 */}
         {userData.profile && (
-          <div className="mt-4 p-3 bg-white/20 rounded-lg border border-white/30 relative z-10">
+          <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-white/20 rounded-lg border border-white/30 relative z-10">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs sm:text-sm font-bold">
                   {userData.profile.full_name?.charAt(0) || 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">
+                <p className="text-xs sm:text-sm font-medium text-slate-800 truncate">
                   {userData.profile.full_name || 'ユーザー'}
                 </p>
                 <p className="text-xs text-slate-600 truncate">
@@ -110,8 +110,8 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
         )}
       </div>
 
-      <nav className="flex-1 px-4 relative z-10 overflow-y-auto">
-        <ul className="space-y-2">
+      <nav className="flex-1 px-2 sm:px-4 relative z-10 overflow-y-auto">
+        <ul className="space-y-1 sm:space-y-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = currentView === item.view;
@@ -121,15 +121,15 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
                 <button
                   onClick={() => handleMenuClick(item.view)}
                   className={`
-                    w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-all duration-200 group
+                    w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-3 rounded-lg text-left transition-all duration-200 group
                     ${isActive 
                       ? 'bg-gradient-to-r from-navy-600 to-navy-800 text-white shadow-lg' 
                       : 'text-slate-700 hover:bg-white/30 hover:text-slate-900'
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-slate-800'}`} />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-slate-800'}`} />
+                  <span className="text-xs sm:text-sm font-medium truncate">{item.label}</span>
                 </button>
               </li>
             );
@@ -138,13 +138,13 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
       </nav>
 
       {/* ログアウトボタン */}
-      <div className="p-4 lg:p-6 flex-shrink-0 relative z-10">
+      <div className="p-2 sm:p-4 lg:p-6 flex-shrink-0 relative z-10">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center space-x-3 px-4 py-3 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="w-full flex items-center justify-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
         >
-          <LogOut className="w-5 h-5" />
-          <span>ログアウト</span>
+          <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-xs sm:text-sm">ログアウト</span>
         </button>
       </div>
     </div>
