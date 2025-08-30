@@ -102,6 +102,7 @@ function Dashboard() {
         ) : null;
       default:
         return (
+          <>
           <div className="flex h-screen relative">
             {/* Desktop Sidebar */}
             <div className="hidden lg:block">
@@ -129,6 +130,7 @@ function Dashboard() {
               <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
             </div>
           </div>
+          </>
         );
     }
   };
