@@ -172,17 +172,15 @@ function MyPage({ onNavigate }: MyPageProps) {
       console.log('日当設定の読み込みに失敗しました（新規ユーザーの可能性）:', err);
     }
   };
-  }, [userData.profile]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleProfileSave = useCallback(async () => {
+  const handleProfileSave = async () => {
     if (!userData.profile) return;
     
     try {
-      setIsLoading(true);
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -206,12 +204,10 @@ function MyPage({ onNavigate }: MyPageProps) {
     } catch (err) {
       alert('プロフィールの更新に失敗しました');
       console.error('Profile update error:', err);
-    } finally {
-      setIsLoading(false);
     }
-  }, [userData.profile, userProfile, refreshData]);
+  };
 
-  const handleAllowancesSave = useCallback(async () => {
+  const handleAllowancesSave = async () => {
     console.log('handleAllowancesSave called');
     
     if (!userData.profile) {
@@ -225,7 +221,6 @@ function MyPage({ onNavigate }: MyPageProps) {
     console.log('Current allowance flags:', userProfile.allowanceFlags);
     
     try {
-      setIsLoading(true);
       // 既存の設定を確認
       const { data: existingSettings, error: selectError } = await supabase
         .from('allowance_settings')
@@ -305,16 +300,14 @@ function MyPage({ onNavigate }: MyPageProps) {
     } catch (err) {
       console.error('Unexpected error in handleAllowancesSave:', err);
       alert('日当設定の保存に失敗しました: ' + (err instanceof Error ? err.message : '不明なエラー'));
-    } finally {
-      setIsLoading(false);
     }
-  }, [userData.profile, userProfile, loadAllowanceSettings]);
+  };
 
 
-  const handleNotificationSave = useCallback(() => {
+  const handleNotificationSave = () => {
     localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
     alert('通知設定が更新されました');
-  }, [notificationSettings]);
+  };
 
 
   const tabs = [
@@ -326,7 +319,7 @@ function MyPage({ onNavigate }: MyPageProps) {
     { id: 'plan', label: 'プラン管理', icon: CreditCard }
   ];
 
-  const renderProfileTab = () => (
+  const renderProfileTab = useMemo(() => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -410,14 +403,15 @@ function MyPage({ onNavigate }: MyPageProps) {
       <div className="flex justify-end">
         <button
           onClick={handleProfileSave}
+          disabled={isLoading}
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
         >
           <Save className="w-5 h-5" />
-          <span>保存</span>
+          <span>{isLoading ? '保存中...' : '保存'}</span>
         </button>
       </div>
     </div>
-  );
+  ), [userProfile, isLoading, showPasswordChange, handleProfileSave]);
 
   const renderAllowancesTab = () => (
     <div className="space-y-6">
@@ -986,7 +980,7 @@ function MyPage({ onNavigate }: MyPageProps) {
 
               {/* タブコンテンツ */}
               <div className="backdrop-blur-xl bg-white/20 rounded-xl p-6 border border-white/30 shadow-xl">
-                {activeTab === 'profile' && renderProfileTab()}
+                {activeTab === 'profile' && renderProfileTab}
                 {activeTab === 'allowances' && renderAllowancesTab()}
                 {activeTab === 'notifications' && renderNotificationsTab()}
                 {activeTab === 'accounting' && renderAccountingTab()}
