@@ -129,6 +129,7 @@ function MyPage({ onNavigate }: MyPageProps) {
         }
       });
     }
+  }, [userData.profile]);
 
   // 日当設定を読み込む関数
   const loadAllowanceSettings = async () => {
@@ -165,7 +166,7 @@ function MyPage({ onNavigate }: MyPageProps) {
             useAccommodation: existingSettings.overseas_use_accommodation_allowance ?? true,
             useTransportation: existingSettings.overseas_use_transportation_allowance ?? true,
             usePreparation: true
-          },
+          }
         }));
       }
     } catch (err) {
@@ -924,7 +925,6 @@ function MyPage({ onNavigate }: MyPageProps) {
       </div>
     </div>
   );
-  ), []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
@@ -980,12 +980,12 @@ function MyPage({ onNavigate }: MyPageProps) {
 
               {/* タブコンテンツ */}
               <div className="backdrop-blur-xl bg-white/20 rounded-xl p-6 border border-white/30 shadow-xl">
-                {activeTab === 'profile' && renderProfileTab}
-                {activeTab === 'allowances' && renderAllowancesTab}
-                {activeTab === 'notifications' && renderNotificationsTab}
-                {activeTab === 'accounting' && renderAccountingTab}
-                {activeTab === 'users' && renderUsersTab}
-                {activeTab === 'plan' && renderPlanTab}
+                {activeTab === 'profile' && renderProfileTab()}
+                {activeTab === 'allowances' && renderAllowancesTab()}
+                {activeTab === 'notifications' && renderNotificationsTab()}
+                {activeTab === 'accounting' && renderAccountingTab()}
+                {activeTab === 'users' && renderUsersTab()}
+                {activeTab === 'plan' && renderPlanTab()}
               </div>
             </div>
           </div>
