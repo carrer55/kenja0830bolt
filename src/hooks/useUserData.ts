@@ -136,19 +136,19 @@ export function useUserData() {
   }, [user?.id]);
 
   // 統計データを計算
-  const calculateStats = useCallback(() => {
+  const calculateStats = useCallback((applications: typeof userData.applications) => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const monthlyExpenses = userData.applications.expense
+    const monthlyExpenses = applications.expense
       .filter(app => {
         const appDate = new Date(app.created_at);
         return appDate.getMonth() === currentMonth && appDate.getFullYear() === currentYear;
       })
       .reduce((sum, app) => sum + app.amount, 0);
 
-    const monthlyBusinessTrips = userData.applications.businessTrip
+    const monthlyBusinessTrips = applications.businessTrip
       .filter(app => {
         const appDate = new Date(app.created_at);
         return appDate.getMonth() === currentMonth && appDate.getFullYear() === currentYear;
@@ -156,13 +156,13 @@ export function useUserData() {
       .reduce((sum, app) => sum + app.estimated_cost, 0);
 
     const pendingApplications = [
-      ...userData.applications.expense.filter(app => app.status === 'pending'),
-      ...userData.applications.businessTrip.filter(app => app.status === 'pending')
+      ...applications.expense.filter(app => app.status === 'pending'),
+      ...applications.businessTrip.filter(app => app.status === 'pending')
     ].length;
 
     const approvedApplications = [
-      ...userData.applications.expense.filter(app => app.status === 'approved'),
-      ...userData.applications.businessTrip.filter(app => app.status === 'approved')
+      ...applications.expense.filter(app => app.status === 'approved'),
+      ...applications.businessTrip.filter(app => app.status === 'approved')
     ].length;
 
     setUserData(prev => ({
@@ -174,7 +174,8 @@ export function useUserData() {
         approvedApplications
       }
     }));
-  }, [userData.applications]);
+  }
+  )
 
   // 全データを取得
   const fetchAllData = useCallback(async () => {

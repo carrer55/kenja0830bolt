@@ -1,9 +1,36 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Info, TrendingUp, TrendingDown } from 'lucide-react';
 import { useUserData } from '../hooks/useUserData';
 
 function StatsCards() {
   const { userData, loading } = useUserData();
+
+  const statsData = useMemo(() => [
+    {
+      title: '今月の出張日当',
+      value: `¥${userData.stats.monthlyBusinessTrips.toLocaleString()}`,
+      trend: userData.stats.monthlyBusinessTrips > 0 ? `+${userData.stats.monthlyBusinessTrips > 50000 ? '高' : '中'}` : 'なし',
+      trendUp: userData.stats.monthlyBusinessTrips > 0,
+      chartColor: 'from-gray-500 to-gray-700',
+      data: userData.stats.monthlyBusinessTrips
+    },
+    {
+      title: '今月の交通費・宿泊費',
+      value: `¥${userData.stats.monthlyExpenses.toLocaleString()}`,
+      trend: userData.stats.monthlyExpenses > 0 ? `+${userData.stats.monthlyExpenses > 50000 ? '高' : '中'}` : 'なし',
+      trendUp: userData.stats.monthlyExpenses > 0,
+      chartColor: 'from-gray-400 to-gray-600',
+      data: userData.stats.monthlyExpenses
+    },
+    {
+      title: '今月の精算合計',
+      value: `¥${(userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips).toLocaleString()}`,
+      trend: `承認済み¥${userData.stats.approvedAmount > 0 ? userData.stats.approvedAmount.toLocaleString() : '0'}`,
+      trendUp: userData.stats.approvedAmount > 0,
+      chartColor: 'from-gray-600 to-gray-800',
+      data: userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips
+    }
+  ], [userData.stats]);
 
   // データが読み込み中の場合はスケルトン表示
   if (loading) {
@@ -25,33 +52,6 @@ function StatsCards() {
       </div>
     );
   }
-
-  const statsData = [
-    {
-      title: '今月の出張日当',
-      value: `¥${userData.stats.monthlyBusinessTrips.toLocaleString()}`,
-      trend: userData.stats.monthlyBusinessTrips > 0 ? `+${userData.stats.monthlyBusinessTrips > 50000 ? '高' : '中'}` : 'なし',
-      trendUp: userData.stats.monthlyBusinessTrips > 0,
-      chartColor: 'from-gray-500 to-gray-700',
-      data: userData.stats.monthlyBusinessTrips
-    },
-    {
-      title: '今月の交通費・宿泊費',
-      value: `¥${userData.stats.monthlyExpenses.toLocaleString()}`,
-      trend: userData.stats.monthlyExpenses > 0 ? `+${userData.stats.monthlyExpenses > 50000 ? '高' : '中'}` : 'なし',
-      trendUp: userData.stats.monthlyExpenses > 0,
-      chartColor: 'from-gray-400 to-gray-600',
-      data: userData.stats.monthlyExpenses
-    },
-    {
-      title: '今月の精算合計',
-      value: `¥${(userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips).toLocaleString()}`,
-      trend: `承認済み¥${userData.stats.approvedApplications > 0 ? (userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips).toLocaleString() : '0'}`,
-      trendUp: userData.stats.approvedApplications > 0,
-      chartColor: 'from-gray-600 to-gray-800',
-      data: userData.stats.monthlyExpenses + userData.stats.monthlyBusinessTrips
-    }
-  ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
