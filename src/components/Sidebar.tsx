@@ -70,7 +70,7 @@ function Sidebar({ isOpen, onClose, onNavigate, currentView = 'dashboard' }: Sid
 
   return (
     <div className={`
-      fixed lg:relative z-50 lg:z-auto
+      fixed lg:relative z-40 lg:z-auto
       w-64 h-full 
     `}>
     <div className="w-64 h-screen backdrop-blur-xl bg-white/20 border-r border-white/30 flex flex-col shadow-2xl relative overflow-hidden">

@@ -34,7 +34,7 @@ function TopBar({ onMenuClick, onNavigate }: TopBarProps) {
   const unreadCount = getUnreadNotificationCount();
 
   return (
-    <div className="h-16 backdrop-blur-xl bg-white/10 border-b border-white/20 flex items-center justify-between px-4 lg:px-6 shadow-xl relative overflow-hidden w-full">
+    <div className="h-16 backdrop-blur-xl bg-white/10 border-b border-white/20 flex items-center justify-between px-4 lg:px-6 shadow-xl relative overflow-hidden w-full z-50">
       {/* Glass effect overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 backdrop-blur-xl"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/20 to-indigo-50/20"></div>
