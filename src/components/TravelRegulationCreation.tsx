@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Save, Download, FileText, Calendar, MapPin, Calculator, Plus, Trash2 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import { supabase } from '../lib/supabase';
+import { supabaseAuth } from '../lib/supabaseAuth';
 
 interface TravelRegulationCreationProps {
   onNavigate: (view: 'dashboard' | 'business-trip' | 'expense' | 'tax-simulation' | 'travel-regulation-management' | 'travel-regulation-creation') => void;
@@ -37,7 +39,11 @@ interface RegulationData {
 }
 
 function TravelRegulationCreation({ onNavigate }: TravelRegulationCreationProps) {
+  const authState = supabaseAuth.getAuthState();
+  const { user } = authState;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [data, setData] = useState<RegulationData>({
     companyInfo: {
       name: '株式会社サンプル',
@@ -193,23 +199,84 @@ ${data.companyInfo.name}
 ${data.companyInfo.representative}`;
   };
 
-  const handleSave = () => {
-    const savedRegulations = JSON.parse(localStorage.getItem('travelRegulations') || '[]');
-    
-    const newRegulation = {
-      ...data,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      version: `v${data.companyInfo.revision}.0`,
-      companyName: data.companyInfo.name,
-      regulationText: generateRegulationText()
-    };
-    
-    savedRegulations.push(newRegulation);
-    localStorage.setItem('travelRegulations', JSON.stringify(savedRegulations));
-    
-    alert('出張規程が保存されました！');
-    onNavigate('travel-regulation-management');
+  const handleSave = async () => {
+    if (!user) {
+      setError('ユーザー情報が取得できません');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1. 出張規程をメインテーブルに保存
+      const { data: regulation, error: regulationError } = await supabase
+        .from('travel_expense_regulations')
+        .insert({
+          user_id: user.id,
+          regulation_name: `${data.companyInfo.name} 出張旅費規程`,
+          regulation_type: 'domestic',
+          company_name: data.companyInfo.name,
+          company_address: data.companyInfo.address,
+          representative: data.companyInfo.representative,
+          implementation_date: data.implementationDate,
+          revision_number: data.companyInfo.revision,
+          distance_threshold: data.distanceThreshold,
+          is_transportation_real_expense: data.isTransportationRealExpense,
+          is_accommodation_real_expense: data.isAccommodationRealExpense,
+          regulation_text: generateRegulationText(),
+          status: 'draft',
+          position_allowances: data.positions
+        } as any)
+        .select()
+        .single();
+
+      if (regulationError) throw regulationError;
+
+      // 2. 役職別日当データを保存
+      const positionData = data.positions.map((position, index) => ({
+        regulation_id: regulation.id,
+        position_name: position.name,
+        sort_order: index,
+        domestic_daily_allowance: position.domesticDailyAllowance,
+        domestic_accommodation: position.domesticAccommodation,
+        domestic_transportation: position.domesticTransportation,
+        overseas_daily_allowance: position.overseasDailyAllowance,
+        overseas_accommodation: position.overseasAccommodation,
+        overseas_preparation: position.overseasPreparation,
+        overseas_transportation: position.overseasTransportation
+      }));
+
+      const { error: positionsError } = await supabase
+        .from('regulation_positions')
+        .insert(positionData as any);
+
+      if (positionsError) throw positionsError;
+
+      // 3. バージョン履歴を保存
+      const { error: versionError } = await supabase
+        .from('regulation_versions')
+        .insert({
+          regulation_id: regulation.id,
+          version_number: `v${data.companyInfo.revision}.0`,
+          changes: ['新規作成'],
+          created_by: user.id,
+          regulation_snapshot: {
+            ...data,
+            regulationText: generateRegulationText()
+          }
+        } as any);
+
+      if (versionError) throw versionError;
+
+      alert('出張規程が正常に保存されました！');
+      onNavigate('travel-regulation-management');
+    } catch (err: any) {
+      console.error('出張規程の保存エラー:', err);
+      setError(err.message || '出張規程の保存に失敗しました');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const generateDocument = (format: 'word' | 'pdf') => {
@@ -557,19 +624,27 @@ ${data.companyInfo.representative}`;
                 </div>
 
                 {/* 保存ボタン */}
+                {error && (
+                  <div className="bg-red-50/50 border border-red-200/50 rounded-lg p-4 mb-6">
+                    <p className="text-red-700 text-sm">{error}</p>
+                  </div>
+                )}
+
                 <div className="flex justify-end space-x-4">
                   <button
                     onClick={() => onNavigate('travel-regulation-management')}
+                    disabled={loading}
                     className="px-6 py-3 bg-white/50 hover:bg-white/70 text-slate-700 rounded-lg font-medium transition-colors backdrop-blur-sm"
                   >
                     キャンセル
                   </button>
                   <button
                     onClick={handleSave}
-                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
+                    disabled={loading}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-white rounded-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-5 h-5" />
-                    <span>規程を保存</span>
+                    <span>{loading ? '保存中...' : '規程を保存'}</span>
                   </button>
                 </div>
               </div>
