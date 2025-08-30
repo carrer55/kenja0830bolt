@@ -103,9 +103,14 @@ function Dashboard() {
       default:
         return (
           <>
-          <div className="flex h-screen relative">
+          {/* TopBar - Full Width */}
+          <div className="fixed top-0 left-0 right-0 z-50">
+            <TopBar onMenuClick={toggleSidebar} onNavigate={navigateToView} />
+          </div>
+
+          <div className="flex pt-16 h-screen relative">
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:block w-64 flex-shrink-0">
               <Sidebar isOpen={true} onClose={() => {}} onNavigate={navigateToView} currentView="dashboard" />
             </div>
 
@@ -116,16 +121,32 @@ function Dashboard() {
                   className="fixed inset-0 bg-black/50 z-40 lg:hidden"
                   onClick={toggleSidebar}
                 />
-                <div className="fixed left-0 top-0 h-full z-50 lg:hidden">
+                <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] z-40 lg:hidden">
                   <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} onNavigate={navigateToView} currentView="dashboard" />
                 </div>
               </>
             )}
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0">
-              <div className="w-full">
-                <TopBar onMenuClick={toggleSidebar} onNavigate={navigateToView} />
+            <div className="flex-1 min-w-0">
+              <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
+            </div>
+          </div>
+          </>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23334155%22 fill-opacity=%220.03%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-100/20 via-transparent to-indigo-100/20"></div>
+
+      {renderCurrentView()}
+    </div>
+  );
+}
               </div>
               <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
             </div>
