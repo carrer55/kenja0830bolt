@@ -27,6 +27,7 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
   const [applications, setApplications] = useState<BusinessTripApplication[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<BusinessTripApplication | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [reportedApplicationIds, setReportedApplicationIds] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     report_title: '',
     destination: '',
@@ -35,7 +36,7 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
     purpose: ''
   });
 
-  // 出張申請一覧を読み込み（既に報告書が作成されていないもののみ）
+  // 出張申請一覧を読み込み（ステータス別にソート）
   useEffect(() => {
     if (user) {
       loadApplications();
@@ -46,7 +47,7 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
     if (!user) return;
     
     try {
-      // 承認済みの出張申請を取得（報告書がまだ作成されていないもの）
+      // 全ての出張申請を取得（ステータス別にソート）
       const { data: apps, error: appsError } = await supabase
         .from('business_trip_applications')
         .select(`
@@ -57,7 +58,6 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
           )
         `)
         .eq('user_id', user.id)
-        .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
       if (appsError) {
@@ -77,11 +77,36 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
           return;
         }
 
-        const reportedApplicationIds = new Set(
+        const reportedIds = new Set(
           existingReports?.map(report => report.business_trip_application_id) || []
         );
+        setReportedApplicationIds(reportedIds);
 
-        const availableApplications = apps.filter(app => !reportedApplicationIds.has(app.id));
+        // 報告書が未作成の申請を上位に表示するため、ソート順を調整
+        const availableApplications = apps
+          .filter(app => !reportedIds.has(app.id))
+          .sort((a, b) => {
+            // 報告書が未作成の申請を上位に
+            const aHasReport = reportedIds.has(a.id);
+            const bHasReport = reportedIds.has(b.id);
+            
+            if (aHasReport !== bHasReport) {
+              return aHasReport ? 1 : -1;
+            }
+            
+            // ステータスでソート（承認済み > 承認待ち > 却下）
+            const statusPriority = { 'approved': 3, 'pending': 2, 'rejected': 1, 'cancelled': 0 };
+            const aPriority = statusPriority[a.status as keyof typeof statusPriority] || 0;
+            const bPriority = statusPriority[b.status as keyof typeof statusPriority] || 0;
+            
+            if (aPriority !== bPriority) {
+              return bPriority - aPriority;
+            }
+            
+            // 作成日でソート（新しい順）
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+        
         setApplications(availableApplications);
       }
     } catch (error) {
@@ -188,6 +213,9 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
                     <FileText className="w-5 h-5 mr-2" />
                     出張申請を選択
                   </h2>
+                  <p className="text-sm text-slate-600 mb-4">
+                    報告書が未作成の申請が上位に表示されます。ステータスに応じて適切な申請を選択してください。
+                  </p>
                   
                   <div className="mb-4">
                     <div className="relative">
@@ -207,18 +235,36 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
                       filteredApplications.map((app) => (
                         <div
                           key={app.id}
-                          onClick={() => handleApplicationSelect(app)}
-                          className={`p-4 rounded-lg cursor-pointer transition-all duration-200 ${
+                          onClick={() => app.status === 'approved' ? handleApplicationSelect(app) : null}
+                          className={`p-4 rounded-lg transition-all duration-200 ${
                             selectedApplication?.id === app.id
                               ? 'bg-navy-100 border-2 border-navy-400'
-                              : 'bg-white/30 hover:bg-white/50 border border-white/40'
+                              : app.status === 'approved'
+                              ? 'bg-white/30 hover:bg-white/50 border border-white/40 cursor-pointer'
+                              : 'bg-gray-100/50 border border-gray-200/50 cursor-not-allowed opacity-60'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-medium text-slate-800">{app.destination}</h3>
-                            {selectedApplication?.id === app.id && (
-                              <CheckCircle className="w-5 h-5 text-navy-600" />
-                            )}
+                            <div className="flex items-center space-x-2">
+                              {/* ステータスバッジ */}
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                app.status === 'approved' 
+                                  ? 'bg-green-100 text-green-800 border border-green-200'
+                                  : app.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                  : app.status === 'rejected'
+                                  ? 'bg-red-100 text-red-800 border border-red-200'
+                                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+                              }`}>
+                                {app.status === 'approved' ? '承認済み' :
+                                 app.status === 'pending' ? '承認待ち' :
+                                 app.status === 'rejected' ? '却下' : 'キャンセル'}
+                              </span>
+                              {selectedApplication?.id === app.id && (
+                                <CheckCircle className="w-5 h-5 text-navy-600" />
+                              )}
+                            </div>
                           </div>
                           <p className="text-sm text-slate-600 mb-2">{app.purpose}</p>
                           <div className="flex items-center space-x-4 text-xs text-slate-500">
@@ -231,13 +277,26 @@ function BusinessTripReportCreation({ onNavigate }: BusinessTripReportCreationPr
                               {app.user?.department || '不明'}
                             </span>
                           </div>
+                          {/* 報告書作成状況 */}
+                          <div className="mt-2 pt-2 border-t border-white/20">
+                            <span className="text-xs text-slate-500">
+                              📝 報告書: {reportedApplicationIds.has(app.id) ? '作成済み' : '未作成'}
+                            </span>
+                            {app.status !== 'approved' && (
+                              <div className="mt-1">
+                                <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                                  ⚠️ 承認後に報告書作成可能
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))
                     ) : (
                       <div className="text-center py-8 text-slate-500">
                         <FileText className="w-12 h-12 mx-auto mb-2 text-slate-400" />
                         <p>選択可能な出張申請がありません</p>
-                        <p className="text-sm mt-1">承認済みの出張申請から選択してください</p>
+                        <p className="text-sm mt-1">新しい出張申請を作成するか、既存の申請から選択してください</p>
                       </div>
                     )}
                   </div>

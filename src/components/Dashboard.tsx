@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import Sidebar from './Sidebar';
-import TopBar from './TopBar';
-import MainContent from './MainContent';
+import DashboardMainView from './DashboardMainView';
 import BusinessTripApplication from './BusinessTripApplication';
 import ExpenseApplication from './ExpenseApplication';
 import ApplicationDetail from './ApplicationDetail';
@@ -101,39 +99,12 @@ function Dashboard() {
           />
         ) : null;
       default:
-        return (
-          <>
-          {/* TopBar - Full Width */}
-          <div className="fixed top-0 left-0 right-0 z-50">
-            <TopBar onMenuClick={toggleSidebar} onNavigate={navigateToView} />
-          </div>
-
-          <div className="flex pt-16 h-screen relative">
-            {/* Desktop Sidebar */}
-            <div className="hidden lg:block w-64 flex-shrink-0">
-              <Sidebar isOpen={true} onClose={() => {}} onNavigate={navigateToView} currentView="dashboard" />
-            </div>
-
-            {/* Mobile Sidebar Overlay */}
-            {isSidebarOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                  onClick={toggleSidebar}
-                />
-                <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] z-40 lg:hidden">
-                  <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} onNavigate={navigateToView} currentView="dashboard" />
-                </div>
-              </>
-            )}
-
-            {/* Main Content Area */}
-            <div className="flex-1 min-w-0">
-              <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
-            </div>
-          </div>
-          </>
-        );
+        return <DashboardMainView 
+          isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          onNavigate={navigateToView}
+          onShowDetail={showApplicationDetail}
+        />;
     }
   };
 
