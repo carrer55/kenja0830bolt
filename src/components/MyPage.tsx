@@ -455,22 +455,6 @@ function MyPage({ onNavigate }: MyPageProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-slate-700">出張日当（円）</label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!userProfile.domesticFlags.useDailyAllowance}
-                  onChange={(e) => setUserProfile(prev => ({
-                    ...prev,
-                    domesticFlags: { ...prev.domesticFlags, useDailyAllowance: !e.target.checked },
-                    domesticAllowances: {
-                      ...prev.domesticAllowances,
-                      dailyAllowance: e.target.checked ? 0 : prev.domesticAllowances.dailyAllowance
-                    }
-                  }))}
-                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
-                />
-                <span className="text-xs text-slate-600">日当を使用しない</span>
-              </label>
             </div>
             <input
               type="number"
@@ -479,19 +463,9 @@ function MyPage({ onNavigate }: MyPageProps) {
                 ...prev, 
                 domesticAllowances: { ...prev.domesticAllowances, dailyAllowance: parseInt(e.target.value) || 0 }
               }))}
-              disabled={!userProfile.domesticFlags.useDailyAllowance}
-              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
-                userProfile.domesticFlags.useDailyAllowance 
-                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
-                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
-              }`}
+              className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
             />
-            <p className="text-xs text-slate-500 mt-1">
-              {userProfile.domesticFlags.useDailyAllowance 
-                ? '1日あたりの国内出張日当' 
-                : '出張日当は使用されません（0円）'
-              }
-            </p>
+            <p className="text-xs text-slate-500 mt-1">1日あたりの国内出張日当</p>
           </div>
           
           <div>
@@ -586,22 +560,6 @@ function MyPage({ onNavigate }: MyPageProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-slate-700">出張日当（円）</label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!userProfile.overseasFlags.useDailyAllowance}
-                  onChange={(e) => setUserProfile(prev => ({
-                    ...prev,
-                    overseasFlags: { ...prev.overseasFlags, useDailyAllowance: !e.target.checked },
-                    overseasAllowances: {
-                      ...prev.overseasAllowances,
-                      dailyAllowance: e.target.checked ? 0 : prev.overseasAllowances.dailyAllowance
-                    }
-                  }))}
-                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
-                />
-                <span className="text-xs text-slate-600">日当を使用しない</span>
-              </label>
             </div>
             <input
               type="number"
@@ -610,19 +568,9 @@ function MyPage({ onNavigate }: MyPageProps) {
                 ...prev, 
                 overseasAllowances: { ...prev.overseasAllowances, dailyAllowance: parseInt(e.target.value) || 0 }
               }))}
-              disabled={!userProfile.overseasFlags.useDailyAllowance}
-              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
-                userProfile.overseasFlags.useDailyAllowance 
-                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
-                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
-              }`}
+              className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
             />
-            <p className="text-xs text-slate-500 mt-1">
-              {userProfile.overseasFlags.useDailyAllowance 
-                ? '1日あたりの海外出張日当' 
-                : '出張日当は使用されません（0円）'
-              }
-            </p>
+            <p className="text-xs text-slate-500 mt-1">1日あたりの海外出張日当</p>
           </div>
           
           <div>
@@ -761,7 +709,7 @@ function MyPage({ onNavigate }: MyPageProps) {
               <p className="text-slate-600 mb-1">国内日帰り出張</p>
               <p className="text-xl font-bold text-slate-800">
                 ¥{(
-                  (userProfile.domesticFlags.useDailyAllowance ? userProfile.domesticAllowances.dailyAllowance : 0) + 
+                  userProfile.domesticAllowances.dailyAllowance + 
                   (userProfile.domesticFlags.useTransportation ? userProfile.domesticAllowances.transportation : 0)
                 ).toLocaleString()}
               </p>
@@ -770,7 +718,7 @@ function MyPage({ onNavigate }: MyPageProps) {
               <p className="text-slate-600 mb-1">国内1泊2日出張</p>
               <p className="text-xl font-bold text-slate-800">
                 ¥{(
-                  (userProfile.domesticFlags.useDailyAllowance ? userProfile.domesticAllowances.dailyAllowance * 2 : 0) + 
+                  userProfile.domesticAllowances.dailyAllowance * 2 + 
                   (userProfile.domesticFlags.useTransportation ? userProfile.domesticAllowances.transportation * 2 : 0) +
                   (userProfile.domesticFlags.useAccommodation ? userProfile.domesticAllowances.accommodation : 0)
                 ).toLocaleString()}
@@ -783,7 +731,7 @@ function MyPage({ onNavigate }: MyPageProps) {
               <p className="text-slate-600 mb-1">海外1泊2日出張</p>
               <p className="text-xl font-bold text-slate-800">
                 ¥{(
-                  (userProfile.overseasFlags.useDailyAllowance ? userProfile.overseasAllowances.dailyAllowance * 2 : 0) + 
+                  userProfile.overseasAllowances.dailyAllowance * 2 + 
                   (userProfile.overseasFlags.useTransportation ? userProfile.overseasAllowances.transportation * 2 : 0) +
                   (userProfile.overseasFlags.useAccommodation ? userProfile.overseasAllowances.accommodation : 0) +
                   (userProfile.overseasFlags.usePreparation ? userProfile.overseasAllowances.preparation : 0)
@@ -794,7 +742,7 @@ function MyPage({ onNavigate }: MyPageProps) {
               <p className="text-slate-600 mb-1">海外2泊3日出張</p>
               <p className="text-xl font-bold text-slate-800">
                 ¥{(
-                  (userProfile.overseasFlags.useDailyAllowance ? userProfile.overseasAllowances.dailyAllowance * 3 : 0) + 
+                  userProfile.overseasAllowances.dailyAllowance * 3 + 
                   (userProfile.overseasFlags.useTransportation ? userProfile.overseasAllowances.transportation * 3 : 0) +
                   (userProfile.overseasFlags.useAccommodation ? userProfile.overseasAllowances.accommodation * 2 : 0) +
                   (userProfile.overseasFlags.usePreparation ? userProfile.overseasAllowances.preparation : 0)
