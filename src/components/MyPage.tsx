@@ -593,96 +593,69 @@ function MyPage({ onNavigate }: MyPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23334155%22 fill-opacity=%220.03%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-100/20 via-transparent to-indigo-100/20"></div>
-
-      <div className="flex h-screen relative">
-        <div className="hidden lg:block">
-          <Sidebar isOpen={true} onClose={() => {}} onNavigate={onNavigate} currentView="my-page" />
+    <div className="flex-1 overflow-auto p-4 lg:p-6 relative z-10">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="flex items-center space-x-2 px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>戻る</span>
+            </button>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">マイページ（設定）</h1>
+          </div>
         </div>
 
-        {isSidebarOpen && (
-          <>
-            <div 
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={toggleSidebar}
-            />
-            <div className="fixed left-0 top-0 h-full z-50 lg:hidden">
-              <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} onNavigate={onNavigate} currentView="my-page" />
-            </div>
-          </>
-        )}
+        {/* タブナビゲーション */}
+        <div className="backdrop-blur-xl bg-white/20 rounded-xl border border-white/30 shadow-xl mb-6">
+          <div className="flex border-b border-white/30">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all duration-200 ${
+                activeTab === 'profile'
+                  ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
+              }`}
+            >
+              <User className="w-5 h-5" />
+              <span>プロフィール</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('allowance')}
+              className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all duration-200 ${
+                activeTab === 'allowance'
+                  ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
+              }`}
+            >
+              <Calculator className="w-5 h-5" />
+              <span>日当設定</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('notifications')}
+              className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all duration-200 ${
+                activeTab === 'notifications'
+                  ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
+              }`}
+            >
+              <Bell className="w-5 h-5" />
+              <span>通知設定</span>
+            </button>
+          </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <TopBar onMenuClick={toggleSidebar} onNavigate={onNavigate} />
-          
-          <div className="flex-1 overflow-auto p-4 lg:p-6 relative z-10">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => onNavigate('dashboard')}
-                    className="flex items-center space-x-2 px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-white/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                    <span>戻る</span>
-                  </button>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">マイページ（設定）</h1>
-                </div>
+          <div className="p-6">
+            {error && (
+              <div className="bg-red-50/50 border border-red-200/50 rounded-lg p-4 mb-6">
+                <p className="text-red-700 text-sm">{error}</p>
               </div>
+            )}
 
-              {/* タブナビゲーション */}
-              <div className="backdrop-blur-xl bg-white/20 rounded-xl border border-white/30 shadow-xl mb-6">
-                <div className="flex border-b border-white/30">
-                  <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all duration-200 ${
-                      activeTab === 'profile'
-                        ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
-                        : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
-                    }`}
-                  >
-                    <User className="w-5 h-5" />
-                    <span>プロフィール</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('allowance')}
-                    className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all duration-200 ${
-                      activeTab === 'allowance'
-                        ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
-                        : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
-                    }`}
-                  >
-                    <Calculator className="w-5 h-5" />
-                    <span>日当設定</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('notifications')}
-                    className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all duration-200 ${
-                      activeTab === 'notifications'
-                        ? 'text-navy-700 border-b-2 border-navy-600 bg-white/20'
-                        : 'text-slate-600 hover:text-slate-800 hover:bg-white/10'
-                    }`}
-                  >
-                    <Bell className="w-5 h-5" />
-                    <span>通知設定</span>
-                  </button>
-                </div>
-
-                <div className="p-6">
-                  {error && (
-                    <div className="bg-red-50/50 border border-red-200/50 rounded-lg p-4 mb-6">
-                      <p className="text-red-700 text-sm">{error}</p>
-                    </div>
-                  )}
-
-                  {activeTab === 'profile' && renderProfileTab()}
-                  {activeTab === 'allowance' && renderAllowanceTab()}
-                  {activeTab === 'notifications' && renderNotificationTab()}
-                </div>
-              </div>
-            </div>
+            {activeTab === 'profile' && renderProfileTab()}
+            {activeTab === 'allowance' && renderAllowanceTab()}
+            {activeTab === 'notifications' && renderNotificationTab()}
           </div>
         </div>
       </div>
