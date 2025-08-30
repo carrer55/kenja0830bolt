@@ -129,7 +129,9 @@ function Dashboard() {
               <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
             </div>
           </div>
-        );
+          <div className="flex-1 lg:mt-0">
+            <MainContent onNavigate={navigateToView} onShowDetail={showApplicationDetail} />
+          </div>
     }
   };
 
