@@ -16,15 +16,27 @@ interface UserProfile {
   phone: string;
   company: string;
   department: string;
-  allowances: {
-    domestic: number;
-    overseas: number;
-    transportation: number;
+  domesticAllowances: {
+    dailyAllowance: number;
     accommodation: number;
+    transportation: number;
   };
-  allowanceFlags: {
-    useTransportation: boolean;
+  overseasAllowances: {
+    dailyAllowance: number;
+    accommodation: number;
+    transportation: number;
+    preparation: number;
+  };
+  domesticFlags: {
+    useDailyAllowance: boolean;
     useAccommodation: boolean;
+    useTransportation: boolean;
+  };
+  overseasFlags: {
+    useDailyAllowance: boolean;
+    useAccommodation: boolean;
+    useTransportation: boolean;
+    usePreparation: boolean;
   };
 }
 
@@ -40,6 +52,7 @@ function MyPage({ onNavigate }: MyPageProps) {
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [allowanceTab, setAllowanceTab] = useState<'domestic' | 'overseas'>('domestic');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [] = useState(false);
   const [] = useState(false);
@@ -52,15 +65,27 @@ function MyPage({ onNavigate }: MyPageProps) {
     phone: '',
     company: '',
     department: '',
-    allowances: {
-      domestic: 5000,
-      overseas: 10000,
-      transportation: 2000,
-      accommodation: 10000
+    domesticAllowances: {
+      dailyAllowance: 5000,
+      accommodation: 10000,
+      transportation: 2000
     },
-    allowanceFlags: {
+    overseasAllowances: {
+      dailyAllowance: 10000,
+      accommodation: 18000,
+      transportation: 3000,
+      preparation: 5000
+    },
+    domesticFlags: {
+      useDailyAllowance: true,
+      useAccommodation: true,
+      useTransportation: true
+    },
+    overseasFlags: {
+      useDailyAllowance: true,
+      useAccommodation: true,
       useTransportation: true,
-      useAccommodation: true
+      usePreparation: true
     }
   });
 
@@ -198,12 +223,17 @@ function MyPage({ onNavigate }: MyPageProps) {
         const { error } = await supabase
           .from('allowance_settings')
           .update({
-            domestic_daily_allowance: userProfile.allowances.domestic,
-            overseas_daily_allowance: userProfile.allowances.overseas,
-            transportation_daily_allowance: userProfile.allowances.transportation,
-            accommodation_daily_allowance: userProfile.allowances.accommodation,
-            use_transportation_allowance: userProfile.allowanceFlags.useTransportation,
-            use_accommodation_allowance: userProfile.allowanceFlags.useAccommodation,
+            domestic_daily_allowance: userProfile.domesticAllowances.dailyAllowance,
+            overseas_daily_allowance: userProfile.overseasAllowances.dailyAllowance,
+            domestic_transportation_daily_allowance: userProfile.domesticAllowances.transportation,
+            domestic_accommodation_daily_allowance: userProfile.domesticAllowances.accommodation,
+            overseas_transportation_daily_allowance: userProfile.overseasAllowances.transportation,
+            overseas_accommodation_daily_allowance: userProfile.overseasAllowances.accommodation,
+            misc_daily_allowance: userProfile.overseasAllowances.preparation,
+            domestic_use_transportation_allowance: userProfile.domesticFlags.useTransportation,
+            domestic_use_accommodation_allowance: userProfile.domesticFlags.useAccommodation,
+            overseas_use_transportation_allowance: userProfile.overseasFlags.useTransportation,
+            overseas_use_accommodation_allowance: userProfile.overseasFlags.useAccommodation,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userData.profile.id);
@@ -362,145 +392,384 @@ function MyPage({ onNavigate }: MyPageProps) {
 
   const renderAllowancesTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">国内出張日当（円）</label>
-          <input
-            type="number"
-            value={userProfile.allowances.domestic}
-            onChange={(e) => setUserProfile(prev => ({ 
-              ...prev, 
-              allowances: { ...prev.allowances, domestic: parseInt(e.target.value) || 0 }
-            }))}
-            className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
-          />
-          <p className="text-xs text-slate-500 mt-1">1日あたりの国内出張日当</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">海外出張日当（円）</label>
-          <input
-            type="number"
-            value={userProfile.allowances.overseas}
-            onChange={(e) => setUserProfile(prev => ({ 
-              ...prev, 
-              allowances: { ...prev.allowances, overseas: parseInt(e.target.value) || 0 }
-            }))}
-            className="w-full px-4 py-3 bg-white/50 border border-white/40 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400 backdrop-blur-xl"
-          />
-          <p className="text-xs text-slate-500 mt-1">1日あたりの海外出張日当</p>
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-slate-700">交通費日当（円）</label>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!userProfile.allowanceFlags.useTransportation}
-                onChange={(e) => setUserProfile(prev => ({
-                  ...prev,
-                  allowanceFlags: { ...prev.allowanceFlags, useTransportation: !e.target.checked },
-                  allowances: {
-                    ...prev.allowances,
-                    transportation: e.target.checked ? 0 : prev.allowances.transportation
-                  }
-                }))}
-                className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
-              />
-              <span className="text-xs text-slate-600">日当を使用しない</span>
-            </label>
-          </div>
-          <input
-            type="number"
-            value={userProfile.allowances.transportation}
-            onChange={(e) => setUserProfile(prev => ({ 
-              ...prev, 
-              allowances: { ...prev.allowances, transportation: parseInt(e.target.value) || 0 }
-            }))}
-            disabled={!userProfile.allowanceFlags.useTransportation}
-            className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
-              userProfile.allowanceFlags.useTransportation 
-                ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
-                : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
-            }`}
-          />
-          <p className="text-xs text-slate-500 mt-1">
-            {userProfile.allowanceFlags.useTransportation 
-              ? '1日あたりの交通費日当' 
-              : '交通費日当は使用されません（0円）'
-            }
-          </p>
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-slate-700">宿泊日当（円）</label>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!userProfile.allowanceFlags.useAccommodation}
-                onChange={(e) => setUserProfile(prev => ({
-                  ...prev,
-                  allowanceFlags: { ...prev.allowanceFlags, useAccommodation: !e.target.checked },
-                  allowances: {
-                    ...prev.allowances,
-                    accommodation: e.target.checked ? 0 : prev.allowances.accommodation
-                  }
-                }))}
-                className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
-              />
-              <span className="text-xs text-slate-600">日当を使用しない</span>
-            </label>
-          </div>
-          <input
-            type="number"
-            value={userProfile.allowances.accommodation}
-            onChange={(e) => setUserProfile(prev => ({ 
-              ...prev, 
-              allowances: { ...prev.allowances, accommodation: parseInt(e.target.value) || 0 }
-            }))}
-            disabled={!userProfile.allowanceFlags.useAccommodation}
-            className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
-              userProfile.allowanceFlags.useAccommodation 
-                ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
-                : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
-            }`}
-          />
-          <p className="text-xs text-slate-500 mt-1">
-            {userProfile.allowanceFlags.useAccommodation 
-              ? '1泊あたりの宿泊日当' 
-              : '宿泊日当は使用されません（0円）'
-            }
-          </p>
-        </div>
+      {/* 国内・海外タブ */}
+      <div className="flex space-x-1 mb-6 bg-white/30 rounded-lg p-1">
+        <button
+          onClick={() => setAllowanceTab('domestic')}
+          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            allowanceTab === 'domestic'
+              ? 'bg-navy-600 text-white shadow-lg'
+              : 'text-slate-600 hover:text-slate-800 hover:bg-white/30'
+          }`}
+        >
+          国内出張
+        </button>
+        <button
+          onClick={() => setAllowanceTab('overseas')}
+          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            allowanceTab === 'overseas'
+              ? 'bg-navy-600 text-white shadow-lg'
+              : 'text-slate-600 hover:text-slate-800 hover:bg-white/30'
+          }`}
+        >
+          海外出張
+        </button>
       </div>
+
+      {/* 国内出張設定 */}
+      {allowanceTab === 'domestic' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">出張日当（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.domesticFlags.useDailyAllowance}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    domesticFlags: { ...prev.domesticFlags, useDailyAllowance: !e.target.checked },
+                    domesticAllowances: {
+                      ...prev.domesticAllowances,
+                      dailyAllowance: e.target.checked ? 0 : prev.domesticAllowances.dailyAllowance
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.domesticAllowances.dailyAllowance}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                domesticAllowances: { ...prev.domesticAllowances, dailyAllowance: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.domesticFlags.useDailyAllowance}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.domesticFlags.useDailyAllowance 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.domesticFlags.useDailyAllowance 
+                ? '1日あたりの国内出張日当' 
+                : '出張日当は使用されません（0円）'
+              }
+            </p>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">宿泊料（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.domesticFlags.useAccommodation}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    domesticFlags: { ...prev.domesticFlags, useAccommodation: !e.target.checked },
+                    domesticAllowances: {
+                      ...prev.domesticAllowances,
+                      accommodation: e.target.checked ? 0 : prev.domesticAllowances.accommodation
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.domesticAllowances.accommodation}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                domesticAllowances: { ...prev.domesticAllowances, accommodation: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.domesticFlags.useAccommodation}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.domesticFlags.useAccommodation 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.domesticFlags.useAccommodation 
+                ? '1泊あたりの宿泊料' 
+                : '宿泊料は使用されません（0円）'
+              }
+            </p>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">交通費（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.domesticFlags.useTransportation}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    domesticFlags: { ...prev.domesticFlags, useTransportation: !e.target.checked },
+                    domesticAllowances: {
+                      ...prev.domesticAllowances,
+                      transportation: e.target.checked ? 0 : prev.domesticAllowances.transportation
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.domesticAllowances.transportation}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                domesticAllowances: { ...prev.domesticAllowances, transportation: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.domesticFlags.useTransportation}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.domesticFlags.useTransportation 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.domesticFlags.useTransportation 
+                ? '1日あたりの交通費' 
+                : '交通費は使用されません（0円）'
+              }
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 海外出張設定 */}
+      {allowanceTab === 'overseas' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">出張日当（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.overseasFlags.useDailyAllowance}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    overseasFlags: { ...prev.overseasFlags, useDailyAllowance: !e.target.checked },
+                    overseasAllowances: {
+                      ...prev.overseasAllowances,
+                      dailyAllowance: e.target.checked ? 0 : prev.overseasAllowances.dailyAllowance
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.overseasAllowances.dailyAllowance}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                overseasAllowances: { ...prev.overseasAllowances, dailyAllowance: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.overseasFlags.useDailyAllowance}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.overseasFlags.useDailyAllowance 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.overseasFlags.useDailyAllowance 
+                ? '1日あたりの海外出張日当' 
+                : '出張日当は使用されません（0円）'
+              }
+            </p>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">宿泊料（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.overseasFlags.useAccommodation}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    overseasFlags: { ...prev.overseasFlags, useAccommodation: !e.target.checked },
+                    overseasAllowances: {
+                      ...prev.overseasAllowances,
+                      accommodation: e.target.checked ? 0 : prev.overseasAllowances.accommodation
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.overseasAllowances.accommodation}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                overseasAllowances: { ...prev.overseasAllowances, accommodation: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.overseasFlags.useAccommodation}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.overseasFlags.useAccommodation 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.overseasFlags.useAccommodation 
+                ? '1泊あたりの宿泊料' 
+                : '宿泊料は使用されません（0円）'
+              }
+            </p>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">交通費（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.overseasFlags.useTransportation}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    overseasFlags: { ...prev.overseasFlags, useTransportation: !e.target.checked },
+                    overseasAllowances: {
+                      ...prev.overseasAllowances,
+                      transportation: e.target.checked ? 0 : prev.overseasAllowances.transportation
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.overseasAllowances.transportation}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                overseasAllowances: { ...prev.overseasAllowances, transportation: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.overseasFlags.useTransportation}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.overseasFlags.useTransportation 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.overseasFlags.useTransportation 
+                ? '1日あたりの交通費' 
+                : '交通費は使用されません（0円）'
+              }
+            </p>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">支度料（円）</label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!userProfile.overseasFlags.usePreparation}
+                  onChange={(e) => setUserProfile(prev => ({
+                    ...prev,
+                    overseasFlags: { ...prev.overseasFlags, usePreparation: !e.target.checked },
+                    overseasAllowances: {
+                      ...prev.overseasAllowances,
+                      preparation: e.target.checked ? 0 : prev.overseasAllowances.preparation
+                    }
+                  }))}
+                  className="w-4 h-4 text-navy-600 border-slate-300 rounded focus:ring-navy-500 focus:ring-2"
+                />
+                <span className="text-xs text-slate-600">日当を使用しない</span>
+              </label>
+            </div>
+            <input
+              type="number"
+              value={userProfile.overseasAllowances.preparation}
+              onChange={(e) => setUserProfile(prev => ({ 
+                ...prev, 
+                overseasAllowances: { ...prev.overseasAllowances, preparation: parseInt(e.target.value) || 0 }
+              }))}
+              disabled={!userProfile.overseasFlags.usePreparation}
+              className={`w-full px-4 py-3 border border-white/40 rounded-lg backdrop-blur-xl ${
+                userProfile.overseasFlags.usePreparation 
+                  ? 'bg-white/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-400' 
+                  : 'bg-slate-100/50 text-slate-400 cursor-not-allowed'
+              }`}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              {userProfile.overseasFlags.usePreparation 
+                ? '海外出張の支度料' 
+                : '支度料は使用されません（0円）'
+              }
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white/30 rounded-lg p-4">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">日当計算例</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-          <div className="text-center">
-            <p className="text-slate-600 mb-1">国内日帰り出張</p>
-            <p className="text-xl font-bold text-slate-800">
-              ¥{(userProfile.allowances.domestic + (userProfile.allowanceFlags.useTransportation ? userProfile.allowances.transportation : 0)).toLocaleString()}
-            </p>
+        {allowanceTab === 'domestic' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="text-center">
+              <p className="text-slate-600 mb-1">国内日帰り出張</p>
+              <p className="text-xl font-bold text-slate-800">
+                ¥{(
+                  (userProfile.domesticFlags.useDailyAllowance ? userProfile.domesticAllowances.dailyAllowance : 0) + 
+                  (userProfile.domesticFlags.useTransportation ? userProfile.domesticAllowances.transportation : 0)
+                ).toLocaleString()}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-slate-600 mb-1">国内1泊2日出張</p>
+              <p className="text-xl font-bold text-slate-800">
+                ¥{(
+                  (userProfile.domesticFlags.useDailyAllowance ? userProfile.domesticAllowances.dailyAllowance * 2 : 0) + 
+                  (userProfile.domesticFlags.useTransportation ? userProfile.domesticAllowances.transportation * 2 : 0) +
+                  (userProfile.domesticFlags.useAccommodation ? userProfile.domesticAllowances.accommodation : 0)
+                ).toLocaleString()}
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-slate-600 mb-1">海外日帰り出張</p>
-            <p className="text-xl font-bold text-slate-800">
-              ¥{(userProfile.allowances.overseas + (userProfile.allowanceFlags.useTransportation ? userProfile.allowances.transportation : 0)).toLocaleString()}
-            </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="text-center">
+              <p className="text-slate-600 mb-1">海外1泊2日出張</p>
+              <p className="text-xl font-bold text-slate-800">
+                ¥{(
+                  (userProfile.overseasFlags.useDailyAllowance ? userProfile.overseasAllowances.dailyAllowance * 2 : 0) + 
+                  (userProfile.overseasFlags.useTransportation ? userProfile.overseasAllowances.transportation * 2 : 0) +
+                  (userProfile.overseasFlags.useAccommodation ? userProfile.overseasAllowances.accommodation : 0) +
+                  (userProfile.overseasFlags.usePreparation ? userProfile.overseasAllowances.preparation : 0)
+                ).toLocaleString()}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-slate-600 mb-1">海外2泊3日出張</p>
+              <p className="text-xl font-bold text-slate-800">
+                ¥{(
+                  (userProfile.overseasFlags.useDailyAllowance ? userProfile.overseasAllowances.dailyAllowance * 3 : 0) + 
+                  (userProfile.overseasFlags.useTransportation ? userProfile.overseasAllowances.transportation * 3 : 0) +
+                  (userProfile.overseasFlags.useAccommodation ? userProfile.overseasAllowances.accommodation * 2 : 0) +
+                  (userProfile.overseasFlags.usePreparation ? userProfile.overseasAllowances.preparation : 0)
+                ).toLocaleString()}
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-slate-600 mb-1">国内1泊2日出張</p>
-            <p className="text-xl font-bold text-slate-800">
-              ¥{((userProfile.allowances.domestic + (userProfile.allowanceFlags.useTransportation ? userProfile.allowances.transportation : 0)) * 2 + (userProfile.allowanceFlags.useAccommodation ? userProfile.allowances.accommodation : 0)).toLocaleString()}
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-slate-600 mb-1">海外2泊3日出張</p>
-            <p className="text-xl font-bold text-slate-800">
-              ¥{((userProfile.allowances.overseas + (userProfile.allowanceFlags.useTransportation ? userProfile.allowances.transportation : 0)) * 3 + (userProfile.allowanceFlags.useAccommodation ? userProfile.allowances.accommodation * 2 : 0)).toLocaleString()}
-            </p>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="flex justify-end">
