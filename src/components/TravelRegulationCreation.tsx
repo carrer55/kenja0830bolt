@@ -209,7 +209,7 @@ ${data.companyInfo.representative}`;
     setError('');
 
     try {
-      // 1. 出張規程をメインテーブルに保存
+      // 1. 出張規程をメインテーブルに保存（更新されたスキーマを使用）
       const { data: regulation, error: regulationError } = await supabase
         .from('travel_expense_regulations')
         .insert({
@@ -222,9 +222,15 @@ ${data.companyInfo.representative}`;
           implementation_date: data.implementationDate,
           revision_number: data.companyInfo.revision,
           distance_threshold: data.distanceThreshold,
+          company_name: data.companyInfo.name,
+          company_address: data.companyInfo.address,
+          representative: data.companyInfo.representative,
+          implementation_date: data.implementationDate,
+          revision_number: data.companyInfo.revision,
+          distance_threshold: data.distanceThreshold,
           is_transportation_real_expense: data.isTransportationRealExpense,
           is_accommodation_real_expense: data.isAccommodationRealExpense,
-          regulation_text: generateRegulationText(),
+          regulation_full_text: generateRegulationText(),
           status: 'draft',
           position_allowances: data.positions
         } as any)
